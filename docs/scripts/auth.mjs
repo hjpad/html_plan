@@ -4,6 +4,12 @@
 const auth = firebase.auth();
 let onAuthStateChangedCallback = null; // Store the callback from plan.js
 
+// To hide the button
+document.getElementById('registerBtn').classList.add('d-none');
+
+// To show the button
+// document.getElementById('registerBtn').classList.remove('d-none');
+
 // Initialize Auth and set up listener
 export function initAuth(callback) {
     onAuthStateChangedCallback = callback;
