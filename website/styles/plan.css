@@ -47,25 +47,44 @@
     text-align: center;
 }
 
-/* Status & Priority Badges in Table */
-.status-badge, .priority-badge-table {
+/* Status & Priority Badges in Table - now applies to selects */
+.status-select, .priority-select {
     font-size: 0.75em;
     padding: 3px 6px;
     border-radius: 3px;
     font-weight: bold;
-    display: inline-block; /* Ensure they render well in table cells */
+    height: auto; /* Allow select to size to content */
+    min-width: 70px; /* Give a minimum width for readability */
+    appearance: none; /* Remove default arrow for custom look */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e"); /* Custom arrow for select */
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1em 0.8em;
+    padding-right: 1.5rem; /* Make space for custom arrow */
 }
-.priority-high { background-color: #f8d7da; color: #721c24; } /* Red for High */
-.priority-medium { background-color: #ffeeba; color: #856404; } /* Yellow for Medium */
-.priority-low { background-color: #e0e0e0; color: #6c757d; } /* Transparent/Grey for Low */
-.status-todo { background-color: #d1ecf1; color: #0c5460; } /* Blue for To Do */
-.status-donow { background-color: #fff3cd; color: #664d03; } /* Orange for Do Now */
-.status-complete { background-color: #d4edda; color: #155724; } /* Green for Complete */
+/* Specific colors for inline selects */
+.priority-select.priority-high { background-color: #f8d7da; color: #721c24; } /* Red for High */
+.priority-select.priority-medium { background-color: #ffeeba; color: #856404; } /* Yellow for Medium */
+.priority-select.priority-low { background-color: #e0e0e0; color: #6c757d; } /* Transparent/Grey for Low */
 
-/* Sideview */
+.status-select.status-todo { background-color: #d1ecf1; color: #0c5460; } /* Blue for To Do */
+.status-select.status-donow { background-color: #fff3cd; color: #664d03; } /* Orange for Do Now */
+.status-select.status-complete { background-color: #d4edda; color: #155724; } /* Green for Complete */
+
+
+.table-date-input {
+    font-size: 0.9em;
+    padding: 3px 6px;
+    height: auto;
+    width: 100%; /* Fill table cell */
+    min-width: 120px; /* Ensure enough space for date */
+}
+
+
+/* Sideview (Detail Panel) */
 .offcanvas-end {
-    width: 80vw; /* Wider on mobile */
-    max-width: 450px; /* Max width on desktop */
+    width: 90vw; /* Wider on mobile */
+    max-width: 600px; /* ~30% larger on desktop (was 450px) */
 }
 .offcanvas-header {
     border-bottom: 1px solid var(--bs-border-color-translucent);
@@ -84,15 +103,23 @@
 .date-inputs input {
     flex-grow: 1;
 }
-.detail-priority-badge {
-     font-weight: bold;
-     padding: 5px 10px;
-     border-radius: 5px;
-     display: inline-block;
+/* Apply priority colors directly to select in detail view */
+#detailPriority {
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+    height: auto; /* Adjust height for styling */
+    appearance: none; /* Remove default arrow */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1em 0.8em;
+    padding-right: 2rem;
 }
-.detail-priority-high { background-color: #dc3545; color: white; } /* Darker red */
-.detail-priority-medium { background-color: #ffc107; color: black; } /* Darker yellow */
-.detail-priority-low { background-color: #6c757d; color: white; } /* Darker grey */
+#detailPriority.priority-high { background-color: #dc3545; color: white; } /* Darker red */
+#detailPriority.priority-medium { background-color: #ffc107; color: black; } /* Darker yellow */
+#detailPriority.priority-low { background-color: #6c757d; color: white; } /* Darker grey */
+
 
 /* Calendar */
 .calendar-nav {
@@ -159,8 +186,9 @@
 }
 
 /* Dark mode adjustments (Bootstrap handles most, but custom elements need it) */
-[data-bs-theme="dark"] .priority-low { background-color: #495057; color: #dee2e6; }
-[data-bs-theme="dark"] .detail-priority-low { background-color: #adb5bd; color: black; }
+[data-bs-theme="dark"] .priority-select.priority-low,
+[data-bs-theme="dark"] #detailPriority.priority-low { background-color: #495057; color: #dee2e6; }
+[data-bs-theme="dark"] .detail-priority-low { background-color: #adb5bd; color: black; } /* If detail-priority-badge was still used */
 [data-bs-theme="dark"] .project-row { background-color: var(--bs-dark-bg-subtle); }
 [data-bs-theme="dark"] .project-row:hover { background-color: var(--bs-gray-700); }
 [data-bs-theme="dark"] .calendar-day { background-color: var(--bs-body-bg); }

@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let items = []; // Will be populated from Firestore after login
     let currentProjectsSort = 'name';
     let hideCompletedProjects = false;
-    let hideCompletedTasks = false;
+    let hideCompletedTasks = true; // Set to true by default as requested
     let currentCalendarDate = new Date(); // Tracks the month/year currently displayed in the calendar
     let currentCalendarView = 'timespan'; // 'timespan', 'startdate', 'duedate'
     let globalSearchTerm = '';
@@ -29,12 +29,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dark mode elements are handled by initDarkMode from utils.mjs
 
     const detailOffcanvasElement = document.getElementById('detailOffcanvas');
-    const detailOffcanvas = new bootstrap.Offcanvas(detailOffcanvasElement);
+    const detailOffcanvas = new bootstrap.Offcanvas(detailOffcanvasElement, {
+        backdrop: false, // Allow interaction with main content
+        scroll: true     // Allow body scrolling when offcanvas is open
+    });
 
     const projectsTableBody = document.getElementById('projectsTable').querySelector('tbody');
     const tasksTableBody = document.getElementById('tasksTable').querySelector('tbody');
     const calendarGrid = document.getElementById('calendarGrid');
     const mainTabs = document.getElementById('mainTabs');
+
+    // Detail form fields for auto-saving
+    const detailForm = document.getElementById('detailForm');
+    const detailItemIdInput = document.getElementById('detailItemId');
+    const detailItemTypeInput = document.getElementById('detailItemType');
+    const detailTitleInput = document.getElementById('detailTitle');
+    const detailStartDateInput = document.getElementById('detailStartDate');
+    const detailDueDateInput = document.getElementById('detailDueDate');
+    const detailPrioritySelect = document.getElementById('detailPriority');
+    const detailStatusSelect = document.getElementById('detailStatus');
+    const detailDescriptionInput = document.getElementById('detailDescription');
 
 
     // --- Authentication State Change Handler ---
@@ -53,6 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Failed to load items for user:", error);
                 items = []; // Fallback to empty if loading fails
             }
+            // Set initial state for hideCompletedTasks switch
+            document.getElementById('hideCompletedTasksSwitch').checked = hideCompletedTasks;
             refreshAllTabs(); // Render loaded data
         } else {
             // User is signed out
@@ -93,8 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const itemIndex = items.findIndex(i => i.id === itemId);
         if (itemIndex !== -1) {
+            // Update local array first
             items[itemIndex] = { ...items[itemIndex], ...newValues };
-            await saveItemToFirestore(auth.currentUser.uid, items[itemIndex]); // Save updated item to Firestore
+            // Then save to Firestore
+            await saveItemToFirestore(auth.currentUser.uid, items[itemIndex]);
+            console.log(`Item "${items[itemIndex].title}" updated.`);
+            // No need to refreshAllTabs here if it's called from a form submission or onchange event directly.
+            // If calling directly, remember to call refreshAllTabs manually.
         }
     }
 
@@ -124,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Rendering Functions (mostly unchanged, operate on 'items' array) ---
+    // --- Rendering Functions ---
     function applyGlobalSearchFilter(item) {
         if (!globalSearchTerm) return true;
         const searchLower = globalSearchTerm.toLowerCase();
@@ -166,13 +187,37 @@ document.addEventListener('DOMContentLoaded', () => {
             projectRow.innerHTML = `
                 <td><span class="collapse-toggle" data-bs-toggle="collapse" data-bs-target="#project-${project.id}-tasks" aria-expanded="true" aria-controls="project-${project.id}-tasks"><i class="bi bi-chevron-down"></i></span></td>
                 <td>${project.title}</td>
-                <td>${formatDate(project.startDate)}</td>
-                <td>${formatDate(project.dueDate)}</td>
-                <td><span class="priority-badge-table ${getPriorityClass(project.priority)}">${project.priority}</span></td>
-                <td><span class="status-badge ${getStatusClass(project.status)}">${project.status}</span></td>
+                <td><input type="date" class="form-control form-control-sm table-date-input" value="${project.startDate || ''}" data-item-id="${project.id}" data-field="startDate"></td>
+                <td><input type="date" class="form-control form-control-sm table-date-input" value="${project.dueDate || ''}" data-item-id="${project.id}" data-field="dueDate"></td>
+                <td>
+                    <select class="form-select form-select-sm priority-select ${getPriorityClass(project.priority)}" data-item-id="${project.id}" data-field="priority">
+                        <option value="Low" ${project.priority === 'Low' ? 'selected' : ''}>Low</option>
+                        <option value="Medium" ${project.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                        <option value="High" ${project.priority === 'High' ? 'selected' : ''}>High</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-select form-select-sm status-select ${getStatusClass(project.status)}" data-item-id="${project.id}" data-field="status">
+                        <option value="To Do" ${project.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                        <option value="Do Now" ${project.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
+                        <option value="Complete" ${project.status === 'Complete' ? 'selected' : ''}>Complete</option>
+                    </select>
+                </td>
             `;
+            // Add listeners for inline editing fields
+            projectRow.querySelectorAll('input[type="date"], select').forEach(input => {
+                input.addEventListener('change', async (e) => {
+                    const field = e.target.dataset.field;
+                    const value = e.target.value;
+                    await updateItemData(e.target.dataset.itemId, { [field]: value });
+                    // Re-render only necessary parts or refresh whole tab if order/filtering changes
+                    renderProjectsTab(); // Full re-render for simplicity and consistency
+                });
+            });
+
             projectRow.addEventListener('click', (e) => {
-                if (!e.target.closest('.collapse-toggle')) {
+                // Prevent opening detail view when clicking collapse toggle OR inline inputs/selects
+                if (!e.target.closest('.collapse-toggle') && !e.target.closest('input') && !e.target.closest('select')) {
                     openDetailSideview(project.id);
                 }
             });
@@ -201,12 +246,38 @@ document.addEventListener('DOMContentLoaded', () => {
                     taskRow.innerHTML = `
                         <td></td>
                         <td>${task.title}</td>
-                        <td>${formatDate(task.startDate)}</td>
-                        <td>${formatDate(task.dueDate)}</td>
-                        <td><span class="priority-badge-table ${getPriorityClass(task.priority)}">${task.priority}</span></td>
-                        <td><span class="status-badge ${getStatusClass(task.status)}">${task.status}</span></td>
+                        <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.startDate || ''}" data-item-id="${task.id}" data-field="startDate"></td>
+                        <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.dueDate || ''}" data-item-id="${task.id}" data-field="dueDate"></td>
+                        <td>
+                            <select class="form-select form-select-sm priority-select ${getPriorityClass(task.priority)}" data-item-id="${task.id}" data-field="priority">
+                                <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low</option>
+                                <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                                <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm status-select ${getStatusClass(task.status)}" data-item-id="${task.id}" data-field="status">
+                                <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                                <option value="Do Now" ${task.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
+                                <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
+                            </select>
+                        </td>
                     `;
-                    taskRow.addEventListener('click', () => openDetailSideview(task.id));
+                    // Add listeners for inline editing fields
+                    taskRow.querySelectorAll('input[type="date"], select').forEach(input => {
+                        input.addEventListener('change', async (e) => {
+                            const field = e.target.dataset.field;
+                            const value = e.target.value;
+                            await updateItemData(e.target.dataset.itemId, { [field]: value });
+                            renderProjectsTab(); // Full re-render for simplicity and consistency
+                        });
+                    });
+
+                    taskRow.addEventListener('click', (e) => {
+                        if (!e.target.closest('input') && !e.target.closest('select')) {
+                            openDetailSideview(task.id);
+                        }
+                    });
                 });
             }
         });
@@ -271,34 +342,38 @@ document.addEventListener('DOMContentLoaded', () => {
             taskRow.innerHTML = `
                 <td>${task.title}</td>
                 <td>${parentTitle}</td>
-                <td>${formatDate(task.startDate)}</td>
-                <td>${formatDate(task.dueDate)}</td>
+                <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.startDate || ''}" data-item-id="${task.id}" data-field="startDate"></td>
+                <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.dueDate || ''}" data-item-id="${task.id}" data-field="dueDate"></td>
                 <td>
-                    <select class="form-select form-select-sm priority-select" data-item-id="${task.id}">
+                    <select class="form-select form-select-sm priority-select ${getPriorityClass(task.priority)}" data-item-id="${task.id}" data-field="priority">
                         <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low</option>
                         <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium</option>
                         <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High</option>
                     </select>
                 </td>
                 <td>
-                    <select class="form-select form-select-sm status-select" data-item-id="${task.id}">
+                    <select class="form-select form-select-sm status-select ${getStatusClass(task.status)}" data-item-id="${task.id}" data-field="status">
                         <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
                         <option value="Do Now" ${task.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
                         <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
                     </select>
                 </td>
             `;
-            taskRow.querySelector('.priority-select').addEventListener('change', async (e) => {
-                await updateItemData(task.id, { priority: e.target.value });
-                refreshAllTabs(); // Re-render to update badges/sorting if needed
-            });
-            taskRow.querySelector('.status-select').addEventListener('change', async (e) => {
-                await updateItemData(task.id, { status: e.target.value });
-                refreshAllTabs(); // Re-render to update badges/sorting
+            // Add listeners for inline editing fields
+            taskRow.querySelectorAll('input[type="date"], select').forEach(input => {
+                input.addEventListener('change', async (e) => {
+                    const field = e.target.dataset.field;
+                    const value = e.target.value;
+                    await updateItemData(e.target.dataset.itemId, { [field]: value });
+                    // Re-render only necessary parts or refresh whole tab if order/filtering changes
+                    renderTasksTab(); // Full re-render for simplicity and consistency
+                    renderProjectsTab(); // Important to keep both lists updated
+                    renderCalendarTab();
+                });
             });
 
             Array.from(taskRow.children).forEach(cell => {
-                if (!cell.querySelector('.form-select')) {
+                if (!cell.querySelector('input') && !cell.querySelector('select')) {
                     cell.addEventListener('click', () => openDetailSideview(task.id));
                 }
             });
@@ -365,7 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const end = dueDate || startDate;
 
                     if (start && end) {
-                        return dayDate >= start && dayDate <= end;
+                        // Ensure the day is within the start and end dates inclusive
+                        return dayDate.setHours(0,0,0,0) >= start.setHours(0,0,0,0) && dayDate.setHours(0,0,0,0) <= end.setHours(0,0,0,0);
                     }
                 }
                 return false;
@@ -401,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function refreshAllTabs() {
-        // Only refresh if authenticated, otherwise the auth listener will hide the app
         if (auth.currentUser) {
             renderProjectsTab();
             renderTasksTab();
@@ -415,20 +490,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!item) return;
 
         document.getElementById('detailOffcanvasLabel').textContent = item.parentId ? 'Task Details' : 'Project Details';
-        document.getElementById('detailItemId').value = item.id;
-        document.getElementById('detailItemType').value = item.parentId ? 'task' : 'project';
+        detailItemIdInput.value = item.id;
+        detailItemTypeInput.value = item.parentId ? 'task' : 'project';
         document.getElementById('detailItemParentId').value = item.parentId || '';
 
-        document.getElementById('detailTitle').value = item.title;
-        document.getElementById('detailStartDate').value = item.startDate || '';
-        document.getElementById('detailDueDate').value = item.dueDate || '';
-        document.getElementById('detailPriority').value = item.priority;
-        document.getElementById('detailStatus').value = item.status;
-        document.getElementById('detailDescription').value = item.description;
+        detailTitleInput.value = item.title;
+        detailStartDateInput.value = item.startDate || '';
+        detailDueDateInput.value = item.dueDate || '';
+        detailPrioritySelect.value = item.priority;
+        detailStatusSelect.value = item.status;
+        detailDescriptionInput.value = item.description;
 
-        const detailPriorityDisplay = document.getElementById('detailPriorityDisplay');
-        detailPriorityDisplay.textContent = item.priority;
-        detailPriorityDisplay.className = `detail-priority-badge detail-priority-${item.priority.toLowerCase()}`;
+        // Apply priority class to the select element itself
+        detailPrioritySelect.className = `form-select ${getPriorityClass(item.priority)}`;
 
         const addNestedTaskBtn = document.getElementById('addNestedTaskBtn');
         addNestedTaskBtn.style.display = item.parentId ? 'none' : 'inline-block';
@@ -469,36 +543,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dark Mode Switch
     initDarkMode();
 
-    // Update priority badge display when select changes in detail view
-    document.getElementById('detailPriority').addEventListener('change', (e) => {
+    // Automatic Save for Detail Form Fields
+    detailTitleInput.addEventListener('change', (e) => updateItemData(detailItemIdInput.value, { title: e.target.value }));
+    detailStartDateInput.addEventListener('change', (e) => updateItemData(detailItemIdInput.value, { startDate: e.target.value }));
+    detailDueDateInput.addEventListener('change', (e) => updateItemData(detailItemIdInput.value, { dueDate: e.target.value }));
+
+    detailPrioritySelect.addEventListener('change', async (e) => {
         const selectedPriority = e.target.value;
-        const detailPriorityDisplay = document.getElementById('detailPriorityDisplay');
-        detailPriorityDisplay.textContent = selectedPriority;
-        detailPriorityDisplay.className = `detail-priority-badge detail-priority-${selectedPriority.toLowerCase()}`;
+        await updateItemData(detailItemIdInput.value, { priority: selectedPriority });
+        // Update the select's own class for color immediately
+        detailPrioritySelect.className = `form-select ${getPriorityClass(selectedPriority)}`;
+        refreshAllTabs(); // Refresh to ensure list views update their colors/sorting
     });
 
-    // Save changes from detail form
-    document.getElementById('detailForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const itemId = document.getElementById('detailItemId').value;
-        const itemType = document.getElementById('detailItemType').value;
-
-        const updatedValues = {
-            title: document.getElementById('detailTitle').value,
-            startDate: document.getElementById('detailStartDate').value,
-            dueDate: document.getElementById('detailDueDate').value,
-            priority: document.getElementById('detailPriority').value,
-            status: document.getElementById('detailStatus').value,
-            description: document.getElementById('detailDescription').value
-        };
-        await updateItemData(itemId, updatedValues);
-        detailOffcanvas.hide();
-        refreshAllTabs();
+    detailStatusSelect.addEventListener('change', async (e) => {
+        await updateItemData(detailItemIdInput.value, { status: e.target.value });
+        refreshAllTabs(); // Refresh to ensure list views update
     });
+
+    detailDescriptionInput.addEventListener('change', (e) => updateItemData(detailItemIdInput.value, { description: e.target.value }));
+
+    // No form.submit listener for detailForm as auto-save replaces it
 
     document.getElementById('deleteItemBtn').addEventListener('click', async () => {
-        const itemId = document.getElementById('detailItemId').value;
-        const itemType = document.getElementById('detailItemType').value;
+        const itemId = detailItemIdInput.value;
+        const itemType = detailItemTypeInput.value;
         let confirmMessage = `Are you sure you want to delete this ${itemType}?`;
         if (itemType === 'project') {
             confirmMessage += ' All its tasks will also be deleted.';
@@ -512,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('addNestedTaskBtn').addEventListener('click', async () => {
-        const projectId = document.getElementById('detailItemId').value;
+        const projectId = detailItemIdInput.value;
         const project = items.find(i => i.id === projectId);
 
         if (project) {
@@ -615,4 +684,5 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCalendarTab();
         }
     });
+
 });
