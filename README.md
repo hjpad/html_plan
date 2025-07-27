@@ -2,7 +2,7 @@
 
 A simple application for calculations with variables, based on a static webpage.
 
-https://calc.hjpad.app
+https://hjpad.github.io/html_plan
 
 ## License
 
