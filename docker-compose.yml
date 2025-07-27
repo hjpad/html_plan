@@ -1,0 +1,26 @@
+services:
+  caddy-static:
+    image: caddy:latest # Use the official Caddy Docker image
+    container_name: caddy_html_plan
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro # Mount your Caddyfile
+      - ./website:/srv:ro                  # Mount your static files to /srv
+    ports:
+      - "8086:80" # Map host port 8080 to container port 80
+    restart: unless-stopped
+    networks:
+      - static_network
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared_html_plan
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: eyJhIjoiNGY1NDI3MmRlZjdkNjQxMjIwZjJmYWY3YjBkMGViNmYiLCJ0IjoiYWM2YzNkNzEtNTkyNy00OTQxLWFlMGItZmVlYTQ1MTkzYTZhIiwicyI6Ill6a3lZMk5pWW1ZdFpHUm1NQzAwTkRVM0xUbGxNR1F0WVdVNVl6ZzBZVEF4WXpJMyJ9
+    networks:
+      - static_network
+
+networks:
+  static_network:
+    driver: bridge

@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML_Plan Task Manager</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bs-body-bg); /* Use Bootstrap var for background */
+            color: var(--bs-body-color); /* Use Bootstrap var for text color */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition for dark/light mode */
+        }
+
+        /* Main app container */
+        #app-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bs-body-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            margin: 10px; /* Small margin for mobile */
+            overflow: hidden; /* For rounded corners */
+        }
+
+        /* Header */
+        header {
+            background-color: var(--bs-tertiary-bg); /* Light grey background for header */
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            gap: 10px; /* Space between items */
+        }
+
+        #app-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--bs-primary);
+            order: 1; /* For mobile, put name first */
+        }
+
+        #search-field {
+            flex-grow: 1;
+            order: 3; /* For mobile, put search on new line */
+            width: 100%; /* Full width on mobile */
+        }
+        #search-field .form-control {
+            max-width: 600px; /* Limit search width on larger screens */
+            margin: 0 auto; /* Center search on larger screens */
+        }
+
+        #user-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            order: 2; /* For mobile, put user controls after name */
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            background-color: var(--bs-tertiary-bg);
+            padding-left: 10px; /* Align with app content */
+            padding-right: 10px;
+        }
+        .tab-content {
+            padding: 20px;
+            flex-grow: 1; /* Make tab content fill available space */
+            overflow-y: auto; /* Enable scrolling for tab content */
+        }
+
+        /* Tables (Projects & Tasks tabs) */
+        .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: var(--bs-table-striped-bg);
+        }
+        .table thead th {
+            border-bottom: 2px solid var(--bs-border-color-translucent);
+        }
+        .table td, .table th {
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+        .table-responsive {
+            margin-top: 15px;
+        }
+
+        .project-row {
+            font-weight: bold;
+            cursor: pointer;
+            background-color: var(--bs-secondary-bg); /* Slightly darker for project rows */
+        }
+        .project-row:hover {
+            background-color: var(--bs-gray-300); /* Hover effect for project rows */
+        }
+        .task-row {
+            font-size: 0.9em;
+        }
+        .collapse-toggle {
+            cursor: pointer;
+            margin-right: 5px;
+            width: 1em; /* Fixed width for icon */
+            display: inline-block;
+            text-align: center;
+        }
+
+        /* Status & Priority Badges in Table */
+        .status-badge, .priority-badge-table {
+            font-size: 0.75em;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            display: inline-block; /* Ensure they render well in table cells */
+        }
+        .priority-high { background-color: #f8d7da; color: #721c24; } /* Red for High */
+        .priority-medium { background-color: #ffeeba; color: #856404; } /* Yellow for Medium */
+        .priority-low { background-color: #e0e0e0; color: #6c757d; } /* Transparent/Grey for Low */
+        .status-todo { background-color: #d1ecf1; color: #0c5460; } /* Blue for To Do */
+        .status-donow { background-color: #fff3cd; color: #664d03; } /* Orange for Do Now */
+        .status-complete { background-color: #d4edda; color: #155724; } /* Green for Complete */
+
+        /* Sideview */
+        .offcanvas-end {
+            width: 80vw; /* Wider on mobile */
+            max-width: 450px; /* Max width on desktop */
+        }
+        .offcanvas-header {
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+        }
+        .offcanvas-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-buttons {
+            margin-top: auto; /* Push buttons to the bottom */
+            border-top: 1px solid var(--bs-border-color-translucent);
+            padding-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .date-inputs input {
+            flex-grow: 1;
+        }
+        .detail-priority-badge {
+             font-weight: bold;
+             padding: 5px 10px;
+             border-radius: 5px;
+             display: inline-block;
+        }
+        .detail-priority-high { background-color: #dc3545; color: white; } /* Darker red */
+        .detail-priority-medium { background-color: #ffc107; color: black; } /* Darker yellow */
+        .detail-priority-low { background-color: #6c757d; color: white; } /* Darker grey */
+
+        /* Calendar */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            background-color: var(--bs-secondary-bg);
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 5px 0;
+            color: var(--bs-primary);
+        }
+        .calendar-day {
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color-translucent);
+            min-height: 100px; /* Ensure a decent size for days */
+            padding: 5px;
+            border-radius: 4px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Hide overflow tasks */
+        }
+        .calendar-day.empty {
+            background-color: var(--bs-tertiary-bg);
+            border: 1px dashed var(--bs-border-color-translucent);
+        }
+        .calendar-day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .calendar-day-task {
+            background-color: var(--bs-primary);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            margin-bottom: 2px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calendar-day-task:hover {
+            background-color: var(--bs-primary-hover); /* Darker blue on hover */
+        }
+        /* Highlight today */
+        .calendar-day.today {
+            border: 2px solid var(--bs-primary);
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Dark mode adjustments (Bootstrap handles most, but custom elements need it) */
+        [data-bs-theme="dark"] .priority-low { background-color: #495057; color: #dee2e6; }
+        [data-bs-theme="dark"] .detail-priority-low { background-color: #adb5bd; color: black; }
+        [data-bs-theme="dark"] .project-row { background-color: var(--bs-dark-bg-subtle); }
+        [data-bs-theme="dark"] .project-row:hover { background-color: var(--bs-gray-700); }
+        [data-bs-theme="dark"] .calendar-day { background-color: var(--bs-body-bg); }
+        [data-bs-theme="dark"] .calendar-day.empty { background-color: var(--bs-tertiary-bg); }
+    </style>
+</head>
+<body>
+
+    <div id="app-container" class="d-flex flex-column">
+        <header>
+            <div id="app-name">html_plan</div>
+            <div id="search-field" class="input-group">
+                <input type="text" class="form-control" placeholder="Search projects or tasks..." id="globalSearchInput">
+                <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div id="user-controls">
+                <div class="dropdown">
+                    <button class="btn btn-light" type="button" id="userIconDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-4"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userIconDropdown">
+                        <li><h6 class="dropdown-header">Settings</h6></li>
+                        <li>
+                            <div class="form-check form-switch dropdown-item px-4">
+                                <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                                <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects-content" type="button" role="tab" aria-controls="projects-content" aria-selected="true">Projects</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks-content" type="button" role="tab" aria-controls="tasks-content" aria-selected="false">Tasks</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-content" type="button" role="tab" aria-controls="calendar-content" aria-selected="false">Calendar</button>
+            </li>
+        </ul>
+
+        <div class="tab-content flex-grow-1" id="mainTabContent">
+            <!-- Projects Tab Content -->
+            <div class="tab-pane fade show active" id="projects-content" role="tabpanel" aria-labelledby="projects-tab">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <button class="btn btn-primary" id="addProjectBtn">
+                        <i class="bi bi-plus-lg"></i> Add Project
+                    </button>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="projectsSortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Sort by: Name
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="projectsSortDropdown">
+                                <li><a class="dropdown-item" href="#" data-sort="name">Name</a></li>
+                                <li><a class="dropdown-item" href="#" data-sort="date">Due Date</a></li>
+                            </ul>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="hideCompletedProjectsSwitch">
+                            <label class="form-check-label" for="hideCompletedProjectsSwitch">Hide Completed</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped" id="projectsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;"></th> <!-- For Collapse Toggle -->
+                                <th style="width: 30%;">Title</th>
+                                <th style="width: 15%;">Start Date</th>
+                                <th style="width: 15%;">Due Date</th>
+                                <th style="width: 10%;">Priority</th>
+                                <th style="width: 15%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Projects and Tasks will be rendered here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="noProjectsMessage" class="text-center text-muted mt-5" style="display:none;">No projects yet. Click "Add Project" to get started!</p>
+            </div>
+
+            <!-- Tasks Tab Content -->
+            <div class="tab-pane fade" id="tasks-content" role="tabpanel" aria-labelledby="tasks-tab">
+                <div class="d-flex justify-content-end mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="hideCompletedTasksSwitch">
+                        <label class="form-check-label" for="hideCompletedTasksSwitch">Hide Completed</label>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped" id="tasksTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">Title</th>
+                                <th style="width: 20%;">Project</th>
+                                <th style="width: 15%;">Start Date</th>
+                                <th style="width: 15%;">Due Date</th>
+                                <th style="width: 10%;">Priority</th>
+                                <th style="width: 10%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Tasks will be rendered here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="noTasksMessage" class="text-center text-muted mt-5" style="display:none;">No tasks yet. Add tasks from Project detail view.</p>
+            </div>
+
+            <!-- Calendar Tab Content -->
+            <div class="tab-pane fade" id="calendar-content" role="tabpanel" aria-labelledby="calendar-tab">
+                <div class="calendar-nav">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" id="prevMonthBtn"><i class="bi bi-chevron-left"></i></button>
+                        <button class="btn btn-outline-secondary" id="nextMonthBtn"><i class="bi bi-chevron-right"></i></button>
+                        <button class="btn btn-primary" id="todayBtn">Today</button>
+                    </div>
+                    <h4 id="currentMonthYear" class="mb-0 text-center flex-grow-1">Month Year</h4>
+                    <div class="d-flex gap-2">
+                        <select class="form-select w-auto" id="yearSelect"></select>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="calendarViewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                View: Time Span
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="calendarViewDropdown">
+                                <li><a class="dropdown-item" href="#" data-view="timespan">Time Span</a></li>
+                                <li><a class="dropdown-item" href="#" data-view="startdate">Only Start Date</a></li>
+                                <li><a class="dropdown-item" href="#" data-view="duedate">Only Due Date</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Day headers -->
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+                    <!-- Calendar days will be rendered here by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sideview (Offcanvas) for Task/Project Details -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="detailOffcanvas" aria-labelledby="detailOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="detailOffcanvasLabel">Item Details</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <form id="detailForm">
+                <input type="hidden" id="detailItemId">
+                <input type="hidden" id="detailItemType"> <!-- 'project' or 'task' -->
+                <input type="hidden" id="detailItemParentId">
+
+                <div class="mb-3">
+                    <label for="detailTitle" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="detailTitle" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Dates</label>
+                    <div class="input-group date-inputs">
+                        <input type="date" class="form-control" id="detailStartDate" title="Start Date">
+                        <span class="input-group-text">-</span>
+                        <input type="date" class="form-control" id="detailDueDate" title="Due Date">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="detailPriority" class="form-label">Priority</label>
+                    <select class="form-select" id="detailPriority">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                    <span id="detailPriorityDisplay" class="detail-priority-badge mt-2"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="detailStatus" class="form-label">Status</label>
+                    <select class="form-select" id="detailStatus">
+                        <option value="To Do">To Do</option>
+                        <option value="Do Now">Do Now</option>
+                        <option value="Complete">Complete</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="detailDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="detailDescription" rows="5"></textarea>
+                </div>
+
+                <div class="detail-buttons mt-auto">
+                    <button type="submit" class="btn btn-success flex-grow-1">Save Changes</button>
+                    <button type="button" class="btn btn-outline-primary" id="addNestedTaskBtn" style="display:none;">
+                        <i class="bi bi-plus-lg"></i> Add Task
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" id="deleteItemBtn">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eJ7y57+opsmga6" crossorigin="anonymous"></script> -->
+	<script src="scripts/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Data Storage and Initialization ---
+            let items = JSON.parse(localStorage.getItem('items')) || [];
+            let currentProjectsSort = 'name';
+            let hideCompletedProjects = false;
+            let hideCompletedTasks = false;
+            let currentCalendarDate = new Date(); // Tracks the month/year currently displayed in the calendar
+            let currentCalendarView = 'timespan'; // 'timespan', 'startdate', 'duedate'
+            let globalSearchTerm = '';
+
+            const detailOffcanvasElement = document.getElementById('detailOffcanvas');
+            const detailOffcanvas = new bootstrap.Offcanvas(detailOffcanvasElement);
+
+            // --- Helper Functions ---
+            function generateId() {
+                return '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            function saveItems() {
+                localStorage.setItem('items', JSON.stringify(items));
+            }
+
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString + 'T00:00:00'); // Add T00:00:00 to treat as UTC day start
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            function getPriorityClass(priority) {
+                return `priority-${priority.toLowerCase()}`;
+            }
+
+            function getStatusClass(status) {
+                return `status-${status.toLowerCase().replace(/\s+/g, '')}`;
+            }
+
+            // --- Dark Mode Logic ---
+            const darkModeSwitch = document.getElementById('darkModeSwitch');
+            const htmlElement = document.documentElement;
+
+            // Load saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                htmlElement.setAttribute('data-bs-theme', savedTheme);
+                darkModeSwitch.checked = (savedTheme === 'dark');
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                // Default to system preference if no saved preference
+                htmlElement.setAttribute('data-bs-theme', 'dark');
+                darkModeSwitch.checked = true;
+            }
+
+            darkModeSwitch.addEventListener('change', () => {
+                if (darkModeSwitch.checked) {
+                    htmlElement.setAttribute('data-bs-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    htmlElement.setAttribute('data-bs-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // --- Rendering Functions ---
+
+            function applyGlobalSearchFilter(item) {
+                if (!globalSearchTerm) return true;
+                const searchLower = globalSearchTerm.toLowerCase();
+                return item.title.toLowerCase().includes(searchLower) ||
+                       item.description.toLowerCase().includes(searchLower);
+            }
+
+            function renderProjectsTab() {
+                const projectsTableBody = document.getElementById('projectsTable').querySelector('tbody');
+                projectsTableBody.innerHTML = ''; // Clear table
+                document.getElementById('noProjectsMessage').style.display = 'none';
+
+                let projects = items.filter(item => !item.parentId && applyGlobalSearchFilter(item));
+
+                if (hideCompletedProjects) {
+                    projects = projects.filter(p => p.status !== 'Complete');
+                }
+
+                if (currentProjectsSort === 'name') {
+                    projects.sort((a, b) => a.title.localeCompare(b.title));
+                } else if (currentProjectsSort === 'date') {
+                    projects.sort((a, b) => {
+                        const dateA = a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31');
+                        const dateB = b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
+                        return dateA - dateB;
+                    });
+                }
+
+                if (projects.length === 0) {
+                    document.getElementById('noProjectsMessage').style.display = 'block';
+                    return;
+                }
+
+                projects.forEach(project => {
+                    const projectRow = projectsTableBody.insertRow();
+                    projectRow.className = 'project-row';
+                    projectRow.dataset.itemId = project.id;
+                    projectRow.dataset.itemType = 'project';
+                    projectRow.innerHTML = `
+                        <td><span class="collapse-toggle" data-bs-toggle="collapse" data-bs-target="#project-${project.id}-tasks" aria-expanded="true" aria-controls="project-${project.id}-tasks"><i class="bi bi-chevron-down"></i></span></td>
+                        <td>${project.title}</td>
+                        <td>${formatDate(project.startDate)}</td>
+                        <td>${formatDate(project.dueDate)}</td>
+                        <td><span class="priority-badge-table ${getPriorityClass(project.priority)}">${project.priority}</span></td>
+                        <td><span class="status-badge ${getStatusClass(project.status)}">${project.status}</span></td>
+                    `;
+                    projectRow.addEventListener('click', (e) => {
+                        // Prevent opening detail view when clicking collapse toggle
+                        if (!e.target.closest('.collapse-toggle')) {
+                            openDetailSideview(project.id);
+                        }
+                    });
+
+                    // Nested row for tasks (initially visible)
+                    const tasksRow = projectsTableBody.insertRow();
+                    tasksRow.innerHTML = `<td colspan="6" class="p-0">
+                        <div class="collapse show" id="project-${project.id}-tasks">
+                            <table class="table table-sm mb-0">
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </td>`;
+
+                    const nestedTableBody = tasksRow.querySelector('tbody');
+                    let projectTasks = items.filter(item => item.parentId === project.id && applyGlobalSearchFilter(item));
+
+                    // Sort tasks within project by title
+                    projectTasks.sort((a, b) => a.title.localeCompare(b.title));
+
+                    if (projectTasks.length === 0) {
+                        nestedTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-2">No tasks for this project yet.</td></tr>`;
+                    } else {
+                        projectTasks.forEach(task => {
+                            const taskRow = nestedTableBody.insertRow();
+                            taskRow.className = 'task-row';
+                            taskRow.dataset.itemId = task.id;
+                            taskRow.dataset.itemType = 'task';
+                            taskRow.innerHTML = `
+                                <td></td>
+                                <td>${task.title}</td>
+                                <td>${formatDate(task.startDate)}</td>
+                                <td>${formatDate(task.dueDate)}</td>
+                                <td><span class="priority-badge-table ${getPriorityClass(task.priority)}">${task.priority}</span></td>
+                                <td><span class="status-badge ${getStatusClass(task.status)}">${task.status}</span></td>
+                            `;
+                            taskRow.addEventListener('click', () => openDetailSideview(task.id));
+                        });
+                    }
+                });
+
+                // Attach collapse listeners after all rows are rendered
+                projectsTableBody.querySelectorAll('.collapse-toggle').forEach(toggle => {
+                    const icon = toggle.querySelector('i');
+                    const targetId = toggle.dataset.bsTarget;
+                    const collapseElement = document.querySelector(targetId);
+
+                    collapseElement.addEventListener('show.bs.collapse', () => {
+                        icon.classList.remove('bi-chevron-right');
+                        icon.classList.add('bi-chevron-down');
+                    });
+                    collapseElement.addEventListener('hide.bs.collapse', () => {
+                        icon.classList.remove('bi-chevron-down');
+                        icon.classList.add('bi-chevron-right');
+                    });
+                });
+            }
+
+            function renderTasksTab() {
+                const tasksTableBody = document.getElementById('tasksTable').querySelector('tbody');
+                tasksTableBody.innerHTML = '';
+                document.getElementById('noTasksMessage').style.display = 'none';
+
+                let allTasks = items.filter(item => item.parentId && applyGlobalSearchFilter(item));
+
+                if (hideCompletedTasks) {
+                    allTasks = allTasks.filter(t => t.status !== 'Complete');
+                }
+
+                const statusOrder = { 'Do Now': 1, 'To Do': 2, 'Complete': 3 }; // Define grouping order
+                allTasks.sort((a, b) => {
+                    // Group by status
+                    const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+                    if (statusDiff !== 0) return statusDiff;
+
+                    // Then order by ascending dates (dueDate preferred, then startDate)
+                    const dateA = a.dueDate ? new Date(a.dueDate) : (a.startDate ? new Date(a.startDate) : new Date('9999-12-31'));
+                    const dateB = b.dueDate ? new Date(b.dueDate) : (b.startDate ? new Date(b.startDate) : new Date('9999-12-31'));
+                    return dateA - dateB;
+                });
+
+                if (allTasks.length === 0) {
+                    document.getElementById('noTasksMessage').style.display = 'block';
+                    return;
+                }
+
+                let currentStatusGroup = null;
+                allTasks.forEach(task => {
+                    if (task.status !== currentStatusGroup) {
+                        currentStatusGroup = task.status;
+                        const headerRow = tasksTableBody.insertRow();
+                        headerRow.className = 'table-active'; // Bootstrap class for active/header row styling
+                        headerRow.innerHTML = `<td colspan="6"><strong>${currentStatusGroup}</strong></td>`;
+                    }
+
+                    const taskRow = tasksTableBody.insertRow();
+                    taskRow.className = 'task-row';
+                    taskRow.dataset.itemId = task.id;
+                    taskRow.dataset.itemType = 'task';
+                    const parentProject = items.find(p => p.id === task.parentId);
+                    const parentTitle = parentProject ? parentProject.title : 'N/A';
+
+                    taskRow.innerHTML = `
+                        <td>${task.title}</td>
+                        <td>${parentTitle}</td>
+                        <td>${formatDate(task.startDate)}</td>
+                        <td>${formatDate(task.dueDate)}</td>
+                        <td>
+                            <select class="form-select form-select-sm priority-select" data-item-id="${task.id}">
+                                <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low</option>
+                                <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                                <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm status-select" data-item-id="${task.id}">
+                                <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                                <option value="Do Now" ${task.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
+                                <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
+                            </select>
+                        </td>
+                    `;
+                    taskRow.querySelector('.priority-select').addEventListener('change', (e) => {
+                        updateItem(task.id, { priority: e.target.value });
+                        renderTasksTab(); // Re-render to update badges/sorting if needed
+                        renderProjectsTab(); // Also update project tab if tasks' priority changes
+                        renderCalendarTab();
+                    });
+                    taskRow.querySelector('.status-select').addEventListener('change', (e) => {
+                        updateItem(task.id, { status: e.target.value });
+                        renderTasksTab(); // Re-render to update badges/sorting
+                        renderProjectsTab(); // Also update project tab if tasks' status changes
+                        renderCalendarTab();
+                    });
+
+                    // Allow clicking outside the select to open detail view
+                    Array.from(taskRow.children).forEach(cell => {
+                        if (!cell.querySelector('.form-select')) {
+                            cell.addEventListener('click', () => openDetailSideview(task.id));
+                        }
+                    });
+                });
+            }
+
+            function renderCalendarTab() {
+                const calendarGrid = document.getElementById('calendarGrid');
+                // Clear existing days but keep headers
+                Array.from(calendarGrid.children).filter(child => !child.classList.contains('calendar-day-header')).forEach(child => child.remove());
+
+                document.getElementById('currentMonthYear').textContent = currentCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+                // Populate year select
+                const yearSelect = document.getElementById('yearSelect');
+                const currentYear = new Date().getFullYear();
+                yearSelect.innerHTML = '';
+                for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    if (i === currentCalendarDate.getFullYear()) {
+                        option.selected = true;
+                    }
+                    yearSelect.appendChild(option);
+                }
+
+                const firstDayOfMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
+                const lastDayOfMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
+                const numDaysInMonth = lastDayOfMonth.getDate();
+                const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday
+
+                const today = new Date();
+                today.setHours(0,0,0,0); // Normalize today's date
+
+                // Add empty days for the beginning of the month
+                for (let i = 0; i < firstDayOfWeek; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day empty';
+                    calendarGrid.appendChild(emptyDay);
+                }
+
+                // Add days of the month
+                for (let dayNum = 1; dayNum <= numDaysInMonth; dayNum++) {
+                    const dayDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), dayNum);
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'calendar-day';
+                    dayDiv.innerHTML = `<div class="calendar-day-number">${dayNum}</div>`;
+
+                    if (dayDate.toDateString() === today.toDateString()) {
+                        dayDiv.classList.add('today');
+                    }
+
+                    // Filter items relevant to this day
+                    let relevantItems = items.filter(item => {
+                        if (item.status === 'Complete' || !applyGlobalSearchFilter(item)) return false; // Hide completed and filtered items
+
+                        const startDate = item.startDate ? new Date(item.startDate + 'T00:00:00') : null;
+                        const dueDate = item.dueDate ? new Date(item.dueDate + 'T00:00:00') : null;
+
+                        if (currentCalendarView === 'startdate' && startDate) {
+                            return startDate.toDateString() === dayDate.toDateString();
+                        } else if (currentCalendarView === 'duedate' && dueDate) {
+                            return dueDate.toDateString() === dayDate.toDateString();
+                        } else { // 'timespan'
+                            if (!startDate && !dueDate) return false;
+                            const start = startDate || dueDate; // If only one exists, use it as a point
+                            const end = dueDate || startDate;
+
+                            if (start && end) {
+                                return dayDate >= start && dayDate <= end;
+                            }
+                        }
+                        return false;
+                    });
+
+                    // Sort tasks for display within the day (e.g., by due date)
+                    relevantItems.sort((a,b) => {
+                        const dateA = a.dueDate ? new Date(a.dueDate) : (a.startDate ? new Date(a.startDate) : new Date('9999-12-31'));
+                        const dateB = b.dueDate ? new Date(b.dueDate) : (b.startDate ? new Date(b.startDate) : new Date('9999-12-31'));
+                        return dateA - dateB;
+                    });
+
+
+                    relevantItems.forEach(item => {
+                        const taskSpan = document.createElement('span');
+                        taskSpan.className = `calendar-day-task ${getPriorityClass(item.priority)}`;
+                        taskSpan.textContent = item.title;
+                        taskSpan.dataset.itemId = item.id;
+                        taskSpan.addEventListener('click', () => openDetailSideview(item.id));
+                        dayDiv.appendChild(taskSpan);
+                    });
+
+                    calendarGrid.appendChild(dayDiv);
+                }
+
+                // Add empty days for the end of the month to fill the week
+                const totalCells = firstDayOfWeek + numDaysInMonth;
+                const remainingCells = (7 - (totalCells % 7)) % 7;
+                for (let i = 0; i < remainingCells; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day empty';
+                    calendarGrid.appendChild(emptyDay);
+                }
+            }
+
+
+            function refreshAllTabs() {
+                renderProjectsTab();
+                renderTasksTab();
+                renderCalendarTab();
+            }
+
+            // --- Detail Sideview Logic ---
+            function openDetailSideview(itemId) {
+                const item = items.find(i => i.id === itemId);
+                if (!item) return;
+
+                document.getElementById('detailOffcanvasLabel').textContent = item.parentId ? 'Task Details' : 'Project Details';
+                document.getElementById('detailItemId').value = item.id;
+                document.getElementById('detailItemType').value = item.parentId ? 'task' : 'project';
+                document.getElementById('detailItemParentId').value = item.parentId || '';
+
+                document.getElementById('detailTitle').value = item.title;
+                document.getElementById('detailStartDate').value = item.startDate || '';
+                document.getElementById('detailDueDate').value = item.dueDate || '';
+                document.getElementById('detailPriority').value = item.priority;
+                document.getElementById('detailStatus').value = item.status;
+                document.getElementById('detailDescription').value = item.description;
+
+                // Update priority badge display
+                const detailPriorityDisplay = document.getElementById('detailPriorityDisplay');
+                detailPriorityDisplay.textContent = item.priority;
+                detailPriorityDisplay.className = `detail-priority-badge detail-priority-${item.priority.toLowerCase()}`;
+
+                // Show/hide "Add Task" button
+                const addNestedTaskBtn = document.getElementById('addNestedTaskBtn');
+                addNestedTaskBtn.style.display = item.parentId ? 'none' : 'inline-block';
+
+                detailOffcanvas.show();
+            }
+
+            // Update priority badge display when select changes
+            document.getElementById('detailPriority').addEventListener('change', (e) => {
+                const selectedPriority = e.target.value;
+                const detailPriorityDisplay = document.getElementById('detailPriorityDisplay');
+                detailPriorityDisplay.textContent = selectedPriority;
+                detailPriorityDisplay.className = `detail-priority-badge detail-priority-${selectedPriority.toLowerCase()}`;
+            });
+
+            document.getElementById('detailForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const itemId = document.getElementById('detailItemId').value;
+                const itemType = document.getElementById('detailItemType').value;
+
+                const updatedValues = {
+                    title: document.getElementById('detailTitle').value,
+                    startDate: document.getElementById('detailStartDate').value,
+                    dueDate: document.getElementById('detailDueDate').value,
+                    priority: document.getElementById('detailPriority').value,
+                    status: document.getElementById('detailStatus').value,
+                    description: document.getElementById('detailDescription').value
+                };
+                updateItem(itemId, updatedValues);
+                detailOffcanvas.hide();
+                refreshAllTabs(); // Re-render all tabs to reflect changes
+            });
+
+            function updateItem(itemId, newValues) {
+                const itemIndex = items.findIndex(i => i.id === itemId);
+                if (itemIndex !== -1) {
+                    items[itemIndex] = { ...items[itemIndex], ...newValues };
+                    saveItems();
+                }
+            }
+
+            document.getElementById('deleteItemBtn').addEventListener('click', () => {
+                const itemId = document.getElementById('detailItemId').value;
+                const itemType = document.getElementById('detailItemType').value;
+                let confirmMessage = `Are you sure you want to delete this ${itemType}?`;
+                if (itemType === 'project') {
+                    confirmMessage += ' All its tasks will also be deleted.';
+                }
+
+                if (confirm(confirmMessage)) {
+                    // Remove the item itself
+                    items = items.filter(i => i.id !== itemId);
+                    // If it's a project, remove its tasks too
+                    if (itemType === 'project') {
+                        items = items.filter(i => i.parentId !== itemId);
+                    }
+                    saveItems();
+                    detailOffcanvas.hide();
+                    refreshAllTabs();
+                }
+            });
+
+            document.getElementById('addNestedTaskBtn').addEventListener('click', () => {
+                const projectId = document.getElementById('detailItemId').value;
+                const project = items.find(i => i.id === projectId);
+
+                if (project) {
+                    const newTask = {
+                        id: generateId(),
+                        title: 'New Task for ' + project.title,
+                        description: '',
+                        startDate: new Date().toISOString().split('T')[0], // Today's date
+                        dueDate: '',
+                        priority: 'Medium',
+                        status: 'To Do',
+                        parentId: projectId
+                    };
+                    items.push(newTask);
+                    saveItems();
+                    refreshAllTabs();
+                    // Optionally open detail view for the new task
+                    openDetailSideview(newTask.id);
+                }
+            });
+
+            // --- Event Listeners for Main Controls ---
+
+            // Add Project
+            document.getElementById('addProjectBtn').addEventListener('click', () => {
+                const newProject = {
+                    id: generateId(),
+                    title: 'New Project',
+                    description: '',
+                    startDate: new Date().toISOString().split('T')[0], // Today's date
+                    dueDate: '',
+                    priority: 'Medium',
+                    status: 'To Do',
+                    parentId: null
+                };
+                items.push(newProject);
+                saveItems();
+                refreshAllTabs();
+                openDetailSideview(newProject.id);
+            });
+
+            // Projects Tab Sorting
+            document.querySelectorAll('#projectsSortDropdown + .dropdown-menu .dropdown-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentProjectsSort = e.target.dataset.sort;
+                    document.getElementById('projectsSortDropdown').textContent = `Sort by: ${e.target.textContent}`;
+                    renderProjectsTab();
+                });
+            });
+
+            // Projects Tab Hide Completed Switch
+            document.getElementById('hideCompletedProjectsSwitch').addEventListener('change', (e) => {
+                hideCompletedProjects = e.target.checked;
+                renderProjectsTab();
+            });
+
+            // Tasks Tab Hide Completed Switch
+            document.getElementById('hideCompletedTasksSwitch').addEventListener('change', (e) => {
+                hideCompletedTasks = e.target.checked;
+                renderTasksTab();
+            });
+
+            // Calendar Navigation
+            document.getElementById('prevMonthBtn').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+                renderCalendarTab();
+            });
+            document.getElementById('nextMonthBtn').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+                renderCalendarTab();
+            });
+            document.getElementById('todayBtn').addEventListener('click', () => {
+                currentCalendarDate = new Date();
+                renderCalendarTab();
+            });
+            document.getElementById('yearSelect').addEventListener('change', (e) => {
+                currentCalendarDate.setFullYear(parseInt(e.target.value));
+                renderCalendarTab();
+            });
+            document.querySelectorAll('#calendarViewDropdown + .dropdown-menu .dropdown-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentCalendarView = e.target.dataset.view;
+                    document.getElementById('calendarViewDropdown').textContent = `View: ${e.target.textContent}`;
+                    renderCalendarTab();
+                });
+            });
+
+            // Global Search
+            document.getElementById('globalSearchInput').addEventListener('input', (e) => {
+                globalSearchTerm = e.target.value.trim();
+                refreshAllTabs();
+            });
+            document.getElementById('clearSearchBtn').addEventListener('click', () => {
+                document.getElementById('globalSearchInput').value = '';
+                globalSearchTerm = '';
+                refreshAllTabs();
+            });
+
+
+            // --- Initial Render and Tab Activation ---
+            // Render content for the initially active tab (Projects)
+            refreshAllTabs();
+
+            // Set up event listeners for tab changes to re-render relevant content
+            const mainTabs = document.getElementById('mainTabs');
+            mainTabs.addEventListener('shown.bs.tab', function (event) {
+                const activeTabId = event.target.id;
+                if (activeTabId === 'projects-tab') {
+                    renderProjectsTab();
+                } else if (activeTabId === 'tasks-tab') {
+                    renderTasksTab();
+                } else if (activeTabId === 'calendar-tab') {
+                    renderCalendarTab();
+                }
+            });
+
+        });
+    </script>
+
+</body>
+</html>

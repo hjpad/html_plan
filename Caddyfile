@@ -1,0 +1,11 @@
+:80 {
+    # Set the root directory for serving files
+    root * /srv
+
+    # Enable static file serving
+    file_server
+
+    # (Optional) Enable gzip/brotli compression for static assets
+    # You might want to remove this if Cloudflare handles compression
+    # encode gzip zstd
+}
