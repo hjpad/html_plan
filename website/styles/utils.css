@@ -1,0 +1,58 @@
+/* styles/utils.css */
+body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bs-body-bg); /* Use Bootstrap var for background */
+    color: var(--bs-body-color); /* Use Bootstrap var for text color */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for dark/light mode */
+}
+
+/* Main app container */
+#app-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bs-body-bg);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    margin: 10px; /* Small margin for mobile */
+    overflow: hidden; /* For rounded corners */
+}
+
+/* Header */
+header {
+    background-color: var(--bs-tertiary-bg); /* Light grey background for header */
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    gap: 10px; /* Space between items */
+}
+
+#app-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--bs-primary);
+    order: 1; /* For mobile, put name first */
+}
+
+#search-field {
+    flex-grow: 1;
+    order: 3; /* For mobile, put search on new line */
+    width: 100%; /* Full width on mobile */
+}
+#search-field .form-control {
+    max-width: 600px; /* Limit search width on larger screens */
+    margin: 0 auto; /* Center search on larger screens */
+}
+
+#user-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    order: 2; /* For mobile, put user controls after name */
+}

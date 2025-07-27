@@ -1,0 +1,24 @@
+/* styles/auth.css */
+/* Login Container Styles */
+#login-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bs-secondary-bg);
+}
+#login-box {
+    background-color: var(--bs-body-bg);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+#login-box .app-name-login {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--bs-primary);
+    margin-bottom: 30px;
+}

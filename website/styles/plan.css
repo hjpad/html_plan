@@ -1,0 +1,167 @@
+/* styles/plan.css */
+
+/* Tabs */
+.nav-tabs {
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    background-color: var(--bs-tertiary-bg);
+    padding-left: 10px; /* Align with app content */
+    padding-right: 10px;
+}
+.tab-content {
+    padding: 20px;
+    flex-grow: 1; /* Make tab content fill available space */
+    overflow-y: auto; /* Enable scrolling for tab content */
+}
+
+/* Tables (Projects & Tasks tabs) */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: var(--bs-table-striped-bg);
+}
+.table thead th {
+    border-bottom: 2px solid var(--bs-border-color-translucent);
+}
+.table td, .table th {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+.table-responsive {
+    margin-top: 15px;
+}
+
+.project-row {
+    font-weight: bold;
+    cursor: pointer;
+    background-color: var(--bs-secondary-bg); /* Slightly darker for project rows */
+}
+.project-row:hover {
+    background-color: var(--bs-gray-300); /* Hover effect for project rows */
+}
+.task-row {
+    font-size: 0.9em;
+}
+.collapse-toggle {
+    cursor: pointer;
+    margin-right: 5px;
+    width: 1em; /* Fixed width for icon */
+    display: inline-block;
+    text-align: center;
+}
+
+/* Status & Priority Badges in Table */
+.status-badge, .priority-badge-table {
+    font-size: 0.75em;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+    display: inline-block; /* Ensure they render well in table cells */
+}
+.priority-high { background-color: #f8d7da; color: #721c24; } /* Red for High */
+.priority-medium { background-color: #ffeeba; color: #856404; } /* Yellow for Medium */
+.priority-low { background-color: #e0e0e0; color: #6c757d; } /* Transparent/Grey for Low */
+.status-todo { background-color: #d1ecf1; color: #0c5460; } /* Blue for To Do */
+.status-donow { background-color: #fff3cd; color: #664d03; } /* Orange for Do Now */
+.status-complete { background-color: #d4edda; color: #155724; } /* Green for Complete */
+
+/* Sideview */
+.offcanvas-end {
+    width: 80vw; /* Wider on mobile */
+    max-width: 450px; /* Max width on desktop */
+}
+.offcanvas-header {
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+.offcanvas-body {
+    display: flex;
+    flex-direction: column;
+}
+.detail-buttons {
+    margin-top: auto; /* Push buttons to the bottom */
+    border-top: 1px solid var(--bs-border-color-translucent);
+    padding-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+.date-inputs input {
+    flex-grow: 1;
+}
+.detail-priority-badge {
+     font-weight: bold;
+     padding: 5px 10px;
+     border-radius: 5px;
+     display: inline-block;
+}
+.detail-priority-high { background-color: #dc3545; color: white; } /* Darker red */
+.detail-priority-medium { background-color: #ffc107; color: black; } /* Darker yellow */
+.detail-priority-low { background-color: #6c757d; color: white; } /* Darker grey */
+
+/* Calendar */
+.calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    background-color: var(--bs-secondary-bg);
+    border-radius: 5px;
+    padding: 10px;
+}
+.calendar-day-header {
+    text-align: center;
+    font-weight: bold;
+    padding: 5px 0;
+    color: var(--bs-primary);
+}
+.calendar-day {
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color-translucent);
+    min-height: 100px; /* Ensure a decent size for days */
+    padding: 5px;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Hide overflow tasks */
+}
+.calendar-day.empty {
+    background-color: var(--bs-tertiary-bg);
+    border: 1px dashed var(--bs-border-color-translucent);
+}
+.calendar-day-number {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.calendar-day-task {
+    background-color: var(--bs-primary);
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.75em;
+    margin-bottom: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.calendar-day-task:hover {
+    background-color: var(--bs-primary-hover); /* Darker blue on hover */
+}
+/* Highlight today */
+.calendar-day.today {
+    border: 2px solid var(--bs-primary);
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Dark mode adjustments (Bootstrap handles most, but custom elements need it) */
+[data-bs-theme="dark"] .priority-low { background-color: #495057; color: #dee2e6; }
+[data-bs-theme="dark"] .detail-priority-low { background-color: #adb5bd; color: black; }
+[data-bs-theme="dark"] .project-row { background-color: var(--bs-dark-bg-subtle); }
+[data-bs-theme="dark"] .project-row:hover { background-color: var(--bs-gray-700); }
+[data-bs-theme="dark"] .calendar-day { background-color: var(--bs-body-bg); }
+[data-bs-theme="dark"] .calendar-day.empty { background-color: var(--bs-tertiary-bg); }
