@@ -1,11 +1,16 @@
 /* styles/auth.css */
 /* Login Container Styles */
 #login-container {
-    flex-grow: 1;
+    position: fixed; /* Fix it to the viewport */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full viewport width */
+    height: 100vh; /* Full viewport height */
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--bs-secondary-bg);
+    background-color: var(--bs-secondary-bg); /* Background for the login page */
+    z-index: 10000; /* Ensure it's on top of everything else */
 }
 #login-box {
     background-color: var(--bs-body-bg);
@@ -21,4 +26,20 @@
     font-weight: bold;
     color: var(--bs-primary);
     margin-bottom: 30px;
+}
+/* Style for the password toggle icon */
+.password-toggle-btn {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0 5px;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10; /* Ensure it's above the input */
+    color: var(--bs-secondary-color);
+}
+.password-toggle-btn:hover {
+    color: var(--bs-primary);
 }

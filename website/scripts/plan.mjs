@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const loginEmailInput = document.getElementById('loginEmail');
     const loginPasswordInput = document.getElementById('loginPassword');
+    const togglePasswordBtn = document.getElementById('togglePassword'); // Password toggle button
     const registerBtn = document.getElementById('registerBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     
@@ -85,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentMax = getCalculatedMaxOffcanvasWidth();
         if (window.innerWidth <= 767.98) { // Mobile-specific handling
             detailOffcanvasElement.style.width = '100vw'; // Always 100vw on mobile
-            // localStorage.setItem('offcanvasWidth', '100vw'); // No need to store, always full
         } else { // Desktop handling
             width = Math.max(minOffcanvasWidth, Math.min(width, currentMax));
             detailOffcanvasElement.style.width = `${width}px`;
@@ -283,8 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
             projectRow.dataset.itemId = project.id;
             projectRow.dataset.itemType = 'project';
             projectRow.innerHTML = `
-                <td><span class="collapse-toggle" data-bs-toggle="collapse" data-bs-target="#project-${project.id}-tasks" aria-expanded="true" aria-controls="project-${project.id}-tasks"><i class="bi bi-chevron-down"></i></span></td>
-                <td>${project.title}</td>
+                <td class="sticky-column"><span class="collapse-toggle" data-bs-toggle="collapse" data-bs-target="#project-${project.id}-tasks" aria-expanded="true" aria-controls="project-${project.id}-tasks"><i class="bi bi-chevron-down"></i></span></td>
+                <td><span class="table-cell-title">${project.title}</span></td>
                 <td><input type="date" class="form-control form-control-sm table-date-input" value="${project.startDate || ''}" data-item-id="${project.id}" data-field="startDate"></td>
                 <td><input type="date" class="form-control form-control-sm table-date-input" value="${project.dueDate || ''}" data-item-id="${project.id}" data-field="dueDate"></td>
                 <td>
@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     taskRow.dataset.itemType = 'task';
                     taskRow.innerHTML = `
                         <td></td>
-                        <td>${task.title}</td>
+                        <td><span class="table-cell-title">${task.title}</span></td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.startDate || ''}" data-item-id="${task.id}" data-field="startDate"></td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.dueDate || ''}" data-item-id="${task.id}" data-field="dueDate"></td>
                         <td>
@@ -457,8 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const parentTitle = parentProject ? parentProject.title : 'N/A';
 
                     taskRow.innerHTML = `
-                        <td>${task.title}</td>
-                        <td>${parentTitle}</td>
+                        <td class="sticky-column"><span class="table-cell-title">${task.title}</span></td>
+                        <td class="sticky-column-2"><span class="table-cell-title">${parentTitle}</span></td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.startDate || ''}" data-item-id="${task.id}" data-field="startDate"></td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.dueDate || ''}" data-item-id="${task.id}" data-field="dueDate"></td>
                         <td>
@@ -508,6 +508,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon.classList.add('bi-chevron-right');
             });
         });
+
+        // Sticky column for tasks table: needs dynamic left calculation for the second sticky column
+        // We calculate the width of the first column dynamically and apply it as 'left' for the second.
+        const firstColHeader = tasksTableBody.parentElement.querySelector('thead th.sticky-column');
+        if (firstColHeader) {
+            const firstColWidth = firstColHeader.offsetWidth; // Get the computed width
+            document.querySelectorAll('.tasks-table-fixed-cols th:nth-child(2), .tasks-table-fixed-cols td.sticky-column-2').forEach(el => {
+                el.style.left = `${firstColWidth}px`;
+                // Add class for stripping background on scroll
+                el.classList.add('sticky-column-2-bg-control');
+            });
+        }
     }
 
 
@@ -735,6 +747,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Event Listeners ---
+
+    // Password Toggle
+    togglePasswordBtn.addEventListener('click', () => {
+        const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        loginPasswordInput.setAttribute('type', type);
+        togglePasswordBtn.querySelector('i').classList.toggle('bi-eye');
+        togglePasswordBtn.querySelector('i').classList.toggle('bi-eye-slash');
+    });
 
     // Login Form Submission
     loginForm.addEventListener('submit', async (e) => {

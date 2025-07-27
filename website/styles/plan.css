@@ -8,7 +8,7 @@
     padding-right: 10px;
 }
 .tab-content {
-    padding: 20px;
+    padding: 15px; /* Slightly reduced padding */
     flex-grow: 1; /* Make tab content fill available space */
     overflow-y: auto; /* Enable scrolling for tab content */
 }
@@ -19,14 +19,50 @@
 }
 .table thead th {
     border-bottom: 2px solid var(--bs-border-color-translucent);
+    padding: 0.5rem 0.75rem; /* Reduced vertical padding */
 }
 .table td, .table th {
     vertical-align: middle;
-    padding: 0.75rem;
+    padding: 0.3rem 0.75rem; /* Significantly reduced vertical padding for rows */
+    height: 35px; /* Minimum height for table rows */
 }
 .table-responsive {
     margin-top: 15px;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    position: relative; /* Needed for sticky to work with table */
 }
+
+/* Sticky column styles */
+.table-responsive th.sticky-column,
+.table-responsive td.sticky-column {
+    position: sticky;
+    left: 0;
+    z-index: 2; /* Higher than other table cells */
+    background-color: inherit; /* Inherit row background for striping */
+}
+
+/* Specific sticky column backgrounds to ensure striping works */
+.table-responsive tbody tr:nth-of-type(odd) td.sticky-column {
+    background-color: var(--bs-table-striped-bg);
+}
+.table-responsive tbody tr:nth-of-type(even) td.sticky-column {
+    background-color: var(--bs-table-bg);
+}
+.table-responsive thead th.sticky-column {
+    background-color: var(--bs-tertiary-bg); /* Header background */
+    box-shadow: 1px 0 2px rgba(0,0,0,0.1); /* Subtle shadow for separation */
+}
+
+
+/* Table cell title to be single line */
+.table-cell-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block; /* Important for ellipsis */
+    width: 100%; /* Take full width of cell */
+}
+
 
 .project-row {
     font-weight: bold;
@@ -66,7 +102,6 @@
 /* Specific colors for inline priority selects */
 .priority-select.priority-high { background-color: #f8d7da; color: #721c24; } /* Red for High */
 .priority-select.priority-medium { background-color: #ffeeba; color: #856404; } /* Yellow for Medium */
-/* Changed Low priority color */
 .priority-select.priority-low { background-color: #dee2e6; color: #495057; } /* Very light grey */
 
 /* Specific colors for inline status selects */
@@ -88,12 +123,14 @@
 .status-group-header {
     cursor: pointer;
     font-weight: bold;
+    padding: 0.5rem 0.75rem; /* Match header padding */
 }
 .status-group-header .collapse-toggle {
     display: inline-block;
     vertical-align: middle;
     margin-right: 8px;
 }
+/* Apply full background colors to status group headers */
 .status-group-header.status-todo-header { background-color: #ffeeba; color: #856404; }
 .status-group-header.status-donow-header { background-color: #f8d7da; color: #721c24; }
 .status-group-header.status-onhold-header { background-color: #dee2e6; color: #495057; }
@@ -303,7 +340,6 @@
     margin-bottom: 5px;
 }
 .calendar-day-task {
-    /* Changed from border-left to full background */
     color: white; /* Default text color on colored background */
     padding: 2px 5px;
     border-radius: 3px;
@@ -335,6 +371,8 @@
 /* Priority selects in dark mode */
 [data-bs-theme="dark"] .priority-select.priority-low { background-color: #495057; color: #dee2e6; border-color: var(--bs-border-color-translucent);}
 [data-bs-theme="dark"] #detailPriority.priority-low { background-color: #343a40; color: #dee2e6; } /* Darker for detail view */
+[data-bs-theme="dark"] .calendar-day-task.priority-low { background-color: #495057; color: #dee2e6; }
+
 
 /* Status selects in dark mode */
 [data-bs-theme="dark"] .status-select.status-todo { background-color: #d19a00; color: white; } /* Darker yellow */
@@ -372,39 +410,36 @@
 }
 
 /* Header responsiveness */
-@media (max-width: 575.98px) { /* xs to sm breakpoint */
+header {
+    background-color: var(--bs-tertiary-bg); /* Light grey background for header */
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Space out items */
+    flex-wrap: nowrap; /* Prevent wrapping by default */
+    gap: 10px; /* Space between items */
+    flex-shrink: 0; /* Prevent header from shrinking */
+    z-index: 1000; /* Ensure it stays on top of content below */
+    width: 100%; /* Full width */
+}
+
+/* Desktop: Header items are side-by-side */
+@media (min-width: 768px) { /* md and up breakpoint */
+    #app-name { order: 1; flex-shrink: 0; display: block; } /* Ensure app name visible on desktop */
+    #search-field { order: 2; flex-grow: 1; margin: 0 20px; } /* Search in middle, grows */
+    #user-controls { order: 3; flex-shrink: 0; } /* User controls right */
+}
+
+/* Mobile: Header items stack for very small screens */
+@media (max-width: 767.98px) { /* xs to sm breakpoint */
     header {
-        flex-direction: column;
-        align-items: flex-start;
-        padding-top: 15px; /* More vertical padding */
-        padding-bottom: 15px;
+        flex-wrap: wrap; /* Allow items to wrap */
+        justify-content: center; /* Center items if they wrap */
+        padding: 10px; /* Smaller padding */
     }
-    #app-name { order: 1; display: none; } /* Hide app name on mobile */
-    #user-controls { order: 2; width: 100%; justify-content: flex-end; } /* User icon to right on its line */
-    #search-field { order: 3; width: 100%; margin-top: 10px; } /* Search on a new line, centered */
+    #app-name { order: 1; display: none !important; } /* Hide app name explicitly on mobile */
+    #user-controls { order: 2; width: auto; margin-left: auto; } /* Push user icon to right */
+    #search-field { order: 3; width: 100%; margin-top: 10px; } /* Search on a new line, full width */
     #search-field .form-control { max-width: 100%; }
-}
-
-@media (min-width: 576px) and (max-width: 991.98px) { /* sm to md breakpoint */
-    header {
-        flex-direction: row;
-        align-items: center;
-        flex-wrap: wrap; /* Allow wrapping if content is too wide */
-    }
-    #app-name { order: 1; flex-shrink: 0; display: block; } /* Show app name on small-md desktop */
-    #search-field { order: 2; flex-grow: 1; margin: 0 10px; } /* Search in middle */
-    #user-controls { order: 3; flex-shrink: 0; } /* Keep user controls right */
-    #search-field .form-control { margin: 0; } /* Remove center margin */
-}
-
-@media (min-width: 992px) { /* lg and up */
-    header {
-        flex-direction: row;
-        align-items: center;
-        flex-wrap: nowrap; /* No wrapping on large screens */
-    }
-    #app-name { order: 1; flex-shrink: 0; display: block; }
-    #search-field { order: 2; flex-grow: 1; margin: 0 20px; } /* More space around search */
-    #user-controls { order: 3; flex-shrink: 0; }
-    #search-field .form-control { margin: 0 auto; } /* Center search on large screens */
 }
