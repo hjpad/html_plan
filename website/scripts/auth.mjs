@@ -1,11 +1,6 @@
-// scripts/auth.js
+// scripts/auth.mjs
 
-// Import Firebase config (ensure firebaseConfig.js is loaded before this script)
-// Assuming firebaseConfig is globally available after firebaseConfig.js loads.
-// For modular JS, you'd typically export from firebaseConfig.js, but since it's simple setup,
-// we'll rely on it being global after the script tag.
-// If you encounter "firebase is not defined", ensure firebase-app-compat.js loads first in HTML.
-
+// Assumes firebase app is initialized globally in index.html
 const auth = firebase.auth();
 let onAuthStateChangedCallback = null; // Store the callback from plan.js
 
@@ -32,7 +27,7 @@ export async function loginUser(email, password) {
         } else if (error.code === 'auth/wrong-password') {
             errorMessage = 'Incorrect password.';
         } else if (error.code === 'auth/invalid-email') {
-             errorMessage = 'Invalid email address format.';
+                 errorMessage = 'Invalid email address format.';
         }
         console.error("Login error:", error.message);
         loginMessage.textContent = errorMessage;
@@ -68,7 +63,7 @@ export async function registerUser(email, password) {
         } else if (error.code === 'auth/weak-password') {
             errorMessage = 'Password is too weak (min 6 characters).';
         } else if (error.code === 'auth/invalid-email') {
-             errorMessage = 'Invalid email address format.';
+                 errorMessage = 'Invalid email address format.';
         }
         console.error("Registration error:", error.message);
         loginMessage.textContent = errorMessage;

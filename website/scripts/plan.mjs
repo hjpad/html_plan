@@ -1,14 +1,16 @@
-// scripts/plan.js
+// scripts/plan.mjs
 
-// Import functions from utils.js
-import { generateId, formatDate, getPriorityClass, getStatusClass, initDarkMode } from './utils.js';
-// Import auth functions from auth.js
-import { auth, initAuth, loginUser, registerUser, logoutUser } from './auth.js';
+// Import functions from utils.mjs
+import { generateId, formatDate, getPriorityClass, getStatusClass, initDarkMode } from './utils.mjs';
+// Import auth functions from auth.mjs
+import { auth, initAuth, loginUser, registerUser, logoutUser } from './auth.mjs';
+// Import Firestore functions from firestore.mjs
+import { saveItemToFirestore, deleteItemFromFirestore, loadItemsFromFirestore } from './firestore.mjs';
 
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Global Application State ---
-    let items = JSON.parse(localStorage.getItem('items')) || []; // Default empty or loaded from local storage
+    let items = []; // Will be populated from Firestore after login
     let currentProjectsSort = 'name';
     let hideCompletedProjects = false;
     let hideCompletedTasks = false;
@@ -24,8 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginPasswordInput = document.getElementById('loginPassword');
     const registerBtn = document.getElementById('registerBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const darkModeSwitch = document.getElementById('darkModeSwitch');
-    const htmlElement = document.documentElement; // For dark mode
+    // Dark mode elements are handled by initDarkMode from utils.mjs
 
     const detailOffcanvasElement = document.getElementById('detailOffcanvas');
     const detailOffcanvas = new bootstrap.Offcanvas(detailOffcanvasElement);
@@ -37,17 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Authentication State Change Handler ---
-    function handleAuthStateChange(user) {
+    async function handleAuthStateChange(user) {
         if (user) {
             // User is signed in
-            console.log("User logged in:", user.email);
+            console.log("User logged in:", user.email, "UID:", user.uid);
             loginContainer.style.display = 'none';
             appContainer.style.display = 'flex'; // Show main app
-            // In a real Firebase app, 'items' would be stored in Firestore/Realtime Database
-            // associated with the logged-in user's UID. For this example, we'll keep it in
-            // localStorage, but clearing it on login/logout to simulate user-specific data.
-            // When user logs in, load *their* data.
-            items = JSON.parse(localStorage.getItem(`items_${user.uid}`)) || []; // Load user-specific data
+
+            try {
+                // Load user-specific data from Firestore
+                items = await loadItemsFromFirestore(user.uid);
+                console.log("Loaded items for user:", items);
+            } catch (error) {
+                console.error("Failed to load items for user:", error);
+                items = []; // Fallback to empty if loading fails
+            }
             refreshAllTabs(); // Render loaded data
         } else {
             // User is signed out
@@ -66,36 +71,70 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuth(handleAuthStateChange);
 
 
-    // --- Data Storage and Manipulation ---
-    function saveItems() {
-        // Save to user-specific localStorage for this example
-        // In a real app, this would be `db.collection('users').doc(auth.currentUser.uid).set(items)`
-        if (auth.currentUser) {
-            localStorage.setItem(`items_${auth.currentUser.uid}`, JSON.stringify(items));
-        } else {
-            // If somehow trying to save without a user, clear it or handle
-            localStorage.removeItem('items_null'); // Or similar to prevent accidental saving
+    // --- Data Manipulation (using Firestore) ---
+    async function addItem(itemData) {
+        if (!auth.currentUser) {
+            console.error("Cannot add item: No authenticated user.");
+            return;
         }
+        const newItem = {
+            id: generateId(),
+            ...itemData
+        };
+        items.push(newItem); // Add to local array immediately for responsiveness
+        await saveItemToFirestore(auth.currentUser.uid, newItem);
+        return newItem;
     }
 
-    function updateItem(itemId, newValues) {
+    async function updateItemData(itemId, newValues) {
+        if (!auth.currentUser) {
+            console.error("Cannot update item: No authenticated user.");
+            return;
+        }
         const itemIndex = items.findIndex(i => i.id === itemId);
         if (itemIndex !== -1) {
             items[itemIndex] = { ...items[itemIndex], ...newValues };
-            saveItems();
+            await saveItemToFirestore(auth.currentUser.uid, items[itemIndex]); // Save updated item to Firestore
         }
     }
 
-    // --- Rendering Functions ---
+    async function deleteItem(itemId, itemType) {
+        if (!auth.currentUser) {
+            console.error("Cannot delete item: No authenticated user.");
+            return;
+        }
+
+        // Locally remove the item
+        items = items.filter(i => i.id !== itemId);
+        let itemsToDeleteInFirestore = [itemId]; // Collect IDs for batch delete if needed
+
+        // If it's a project, remove its tasks locally and collect their IDs
+        if (itemType === 'project') {
+            const tasksToDelete = items.filter(i => i.parentId === itemId);
+            tasksToDelete.forEach(task => {
+                itemsToDeleteInFirestore.push(task.id);
+            });
+            items = items.filter(i => i.parentId !== itemId); // Remove tasks from local array
+        }
+
+        // Delete from Firestore (consider batch writes for multiple deletions in real app)
+        for (const idToDelete of itemsToDeleteInFirestore) {
+            await deleteItemFromFirestore(auth.currentUser.uid, idToDelete);
+        }
+    }
+
+
+    // --- Rendering Functions (mostly unchanged, operate on 'items' array) ---
     function applyGlobalSearchFilter(item) {
         if (!globalSearchTerm) return true;
         const searchLower = globalSearchTerm.toLowerCase();
+        // Check both title and description for search term
         return item.title.toLowerCase().includes(searchLower) ||
-               item.description.toLowerCase().includes(searchLower);
+               (item.description && item.description.toLowerCase().includes(searchLower));
     }
 
     function renderProjectsTab() {
-        projectsTableBody.innerHTML = ''; // Clear table
+        projectsTableBody.innerHTML = '';
         document.getElementById('noProjectsMessage').style.display = 'none';
 
         let projects = items.filter(item => !item.parentId && applyGlobalSearchFilter(item));
@@ -133,13 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><span class="status-badge ${getStatusClass(project.status)}">${project.status}</span></td>
             `;
             projectRow.addEventListener('click', (e) => {
-                // Prevent opening detail view when clicking collapse toggle
                 if (!e.target.closest('.collapse-toggle')) {
                     openDetailSideview(project.id);
                 }
             });
 
-            // Nested row for tasks (initially visible)
             const tasksRow = projectsTableBody.insertRow();
             tasksRow.innerHTML = `<td colspan="6" class="p-0">
                 <div class="collapse show" id="project-${project.id}-tasks">
@@ -151,8 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const nestedTableBody = tasksRow.querySelector('tbody');
             let projectTasks = items.filter(item => item.parentId === project.id && applyGlobalSearchFilter(item));
-
-            // Sort tasks within project by title
             projectTasks.sort((a, b) => a.title.localeCompare(b.title));
 
             if (projectTasks.length === 0) {
@@ -176,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Attach collapse listeners after all rows are rendered
         projectsTableBody.querySelectorAll('.collapse-toggle').forEach(toggle => {
             const icon = toggle.querySelector('i');
             const targetId = toggle.dataset.bsTarget;
@@ -203,13 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
             allTasks = allTasks.filter(t => t.status !== 'Complete');
         }
 
-        const statusOrder = { 'Do Now': 1, 'To Do': 2, 'Complete': 3 }; // Define grouping order
+        const statusOrder = { 'Do Now': 1, 'To Do': 2, 'Complete': 3 };
         allTasks.sort((a, b) => {
-            // Group by status
             const statusDiff = statusOrder[a.status] - statusOrder[b.status];
             if (statusDiff !== 0) return statusDiff;
 
-            // Then order by ascending dates (dueDate preferred, then startDate)
             const dateA = a.dueDate ? new Date(a.dueDate) : (a.startDate ? new Date(a.startDate) : new Date('9999-12-31'));
             const dateB = b.dueDate ? new Date(b.dueDate) : (b.startDate ? new Date(b.startDate) : new Date('9999-12-31'));
             return dateA - dateB;
@@ -225,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (task.status !== currentStatusGroup) {
                 currentStatusGroup = task.status;
                 const headerRow = tasksTableBody.insertRow();
-                headerRow.className = 'table-active'; // Bootstrap class for active/header row styling
+                headerRow.className = 'table-active';
                 headerRow.innerHTML = `<td colspan="6"><strong>${currentStatusGroup}</strong></td>`;
             }
 
@@ -256,20 +288,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </select>
                 </td>
             `;
-            taskRow.querySelector('.priority-select').addEventListener('change', (e) => {
-                updateItem(task.id, { priority: e.target.value });
-                renderTasksTab(); // Re-render to update badges/sorting if needed
-                renderProjectsTab(); // Also update project tab if tasks' priority changes
-                renderCalendarTab();
+            taskRow.querySelector('.priority-select').addEventListener('change', async (e) => {
+                await updateItemData(task.id, { priority: e.target.value });
+                refreshAllTabs(); // Re-render to update badges/sorting if needed
             });
-            taskRow.querySelector('.status-select').addEventListener('change', (e) => {
-                updateItem(task.id, { status: e.target.value });
-                renderTasksTab(); // Re-render to update badges/sorting
-                renderProjectsTab(); // Also update project tab if tasks' status changes
-                renderCalendarTab();
+            taskRow.querySelector('.status-select').addEventListener('change', async (e) => {
+                await updateItemData(task.id, { status: e.target.value });
+                refreshAllTabs(); // Re-render to update badges/sorting
             });
 
-            // Allow clicking outside the select to open detail view
             Array.from(taskRow.children).forEach(cell => {
                 if (!cell.querySelector('.form-select')) {
                     cell.addEventListener('click', () => openDetailSideview(task.id));
@@ -279,13 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCalendarTab() {
+        // ... (Calendar rendering logic remains largely the same, operating on 'items' array)
         const calendarGrid = document.getElementById('calendarGrid');
-        // Clear existing days but keep headers
         Array.from(calendarGrid.children).filter(child => !child.classList.contains('calendar-day-header')).forEach(child => child.remove());
 
         document.getElementById('currentMonthYear').textContent = currentCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
-        // Populate year select
         const yearSelect = document.getElementById('yearSelect');
         const currentYear = new Date().getFullYear();
         yearSelect.innerHTML = '';
@@ -302,19 +328,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const firstDayOfMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
         const lastDayOfMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
         const numDaysInMonth = lastDayOfMonth.getDate();
-        const firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday
+        const firstDayOfWeek = firstDayOfMonth.getDay();
 
         const today = new Date();
-        today.setHours(0,0,0,0); // Normalize today's date
+        today.setHours(0,0,0,0);
 
-        // Add empty days for the beginning of the month
         for (let i = 0; i < firstDayOfWeek; i++) {
             const emptyDay = document.createElement('div');
             emptyDay.className = 'calendar-day empty';
             calendarGrid.appendChild(emptyDay);
         }
 
-        // Add days of the month
         for (let dayNum = 1; dayNum <= numDaysInMonth; dayNum++) {
             const dayDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), dayNum);
             const dayDiv = document.createElement('div');
@@ -325,9 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 dayDiv.classList.add('today');
             }
 
-            // Filter items relevant to this day
             let relevantItems = items.filter(item => {
-                if (item.status === 'Complete' || !applyGlobalSearchFilter(item)) return false; // Hide completed and filtered items
+                if (item.status === 'Complete' || !applyGlobalSearchFilter(item)) return false;
 
                 const startDate = item.startDate ? new Date(item.startDate + 'T00:00:00') : null;
                 const dueDate = item.dueDate ? new Date(item.dueDate + 'T00:00:00') : null;
@@ -336,9 +359,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return startDate.toDateString() === dayDate.toDateString();
                 } else if (currentCalendarView === 'duedate' && dueDate) {
                     return dueDate.toDateString() === dayDate.toDateString();
-                } else { // 'timespan'
+                } else {
                     if (!startDate && !dueDate) return false;
-                    const start = startDate || dueDate; // If only one exists, use it as a point
+                    const start = startDate || dueDate;
                     const end = dueDate || startDate;
 
                     if (start && end) {
@@ -348,7 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return false;
             });
 
-            // Sort tasks for display within the day (e.g., by due date)
             relevantItems.sort((a,b) => {
                 const dateA = a.dueDate ? new Date(a.dueDate) : (a.startDate ? new Date(a.startDate) : new Date('9999-12-31'));
                 const dateB = b.dueDate ? new Date(b.dueDate) : (b.startDate ? new Date(b.startDate) : new Date('9999-12-31'));
@@ -368,7 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
             calendarGrid.appendChild(dayDiv);
         }
 
-        // Add empty days for the end of the month to fill the week
         const totalCells = firstDayOfWeek + numDaysInMonth;
         const remainingCells = (7 - (totalCells % 7)) % 7;
         for (let i = 0; i < remainingCells; i++) {
@@ -378,10 +399,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
     function refreshAllTabs() {
-        renderProjectsTab();
-        renderTasksTab();
-        renderCalendarTab();
+        // Only refresh if authenticated, otherwise the auth listener will hide the app
+        if (auth.currentUser) {
+            renderProjectsTab();
+            renderTasksTab();
+            renderCalendarTab();
+        }
     }
 
     // --- Detail Sideview Logic ---
@@ -401,12 +426,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('detailStatus').value = item.status;
         document.getElementById('detailDescription').value = item.description;
 
-        // Update priority badge display
         const detailPriorityDisplay = document.getElementById('detailPriorityDisplay');
         detailPriorityDisplay.textContent = item.priority;
         detailPriorityDisplay.className = `detail-priority-badge detail-priority-${item.priority.toLowerCase()}`;
 
-        // Show/hide "Add Task" button
         const addNestedTaskBtn = document.getElementById('addNestedTaskBtn');
         addNestedTaskBtn.style.display = item.parentId ? 'none' : 'inline-block';
 
@@ -420,23 +443,31 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const email = loginEmailInput.value;
         const password = loginPasswordInput.value;
-        await loginUser(email, password); // Auth module handles messages
+        try {
+            await loginUser(email, password);
+        } catch (error) {
+            // Error messages handled by auth.mjs
+        }
     });
 
     // Register Button Click
     registerBtn.addEventListener('click', async () => {
         const email = loginEmailInput.value;
         const password = loginPasswordInput.value;
-        await registerUser(email, password); // Auth module handles messages
+        try {
+            await registerUser(email, password);
+        } catch (error) {
+            // Error messages handled by auth.mjs
+        }
     });
 
     // Logout Button
     logoutBtn.addEventListener('click', async () => {
-        await logoutUser(); // Auth module handles logout logic
+        await logoutUser();
     });
 
     // Dark Mode Switch
-    initDarkMode(); // Initialize dark mode from utils.js
+    initDarkMode();
 
     // Update priority badge display when select changes in detail view
     document.getElementById('detailPriority').addEventListener('change', (e) => {
@@ -447,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Save changes from detail form
-    document.getElementById('detailForm').addEventListener('submit', (e) => {
+    document.getElementById('detailForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const itemId = document.getElementById('detailItemId').value;
         const itemType = document.getElementById('detailItemType').value;
@@ -460,12 +491,12 @@ document.addEventListener('DOMContentLoaded', () => {
             status: document.getElementById('detailStatus').value,
             description: document.getElementById('detailDescription').value
         };
-        updateItem(itemId, updatedValues);
+        await updateItemData(itemId, updatedValues);
         detailOffcanvas.hide();
-        refreshAllTabs(); // Re-render all tabs to reflect changes
+        refreshAllTabs();
     });
 
-    document.getElementById('deleteItemBtn').addEventListener('click', () => {
+    document.getElementById('deleteItemBtn').addEventListener('click', async () => {
         const itemId = document.getElementById('detailItemId').value;
         const itemType = document.getElementById('detailItemType').value;
         let confirmMessage = `Are you sure you want to delete this ${itemType}?`;
@@ -474,55 +505,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (confirm(confirmMessage)) {
-            // Remove the item itself
-            items = items.filter(i => i.id !== itemId);
-            // If it's a project, remove its tasks too
-            if (itemType === 'project') {
-                items = items.filter(i => i.parentId !== itemId);
-            }
-            saveItems();
+            await deleteItem(itemId, itemType);
             detailOffcanvas.hide();
             refreshAllTabs();
         }
     });
 
-    document.getElementById('addNestedTaskBtn').addEventListener('click', () => {
+    document.getElementById('addNestedTaskBtn').addEventListener('click', async () => {
         const projectId = document.getElementById('detailItemId').value;
         const project = items.find(i => i.id === projectId);
 
         if (project) {
-            const newTask = {
-                id: generateId(),
+            const newTask = await addItem({
                 title: 'New Task for ' + project.title,
                 description: '',
-                startDate: new Date().toISOString().split('T')[0], // Today's date
+                startDate: new Date().toISOString().split('T')[0],
                 dueDate: '',
                 priority: 'Medium',
                 status: 'To Do',
                 parentId: projectId
-            };
-            items.push(newTask);
-            saveItems();
+            });
             refreshAllTabs();
-            // Optionally open detail view for the new task
-            openDetailSideview(newTask.id);
+            openDetailSideview(newTask.id); // Open detail view for the new task
         }
     });
 
     // Add Project
-    document.getElementById('addProjectBtn').addEventListener('click', () => {
-        const newProject = {
-            id: generateId(),
+    document.getElementById('addProjectBtn').addEventListener('click', async () => {
+        const newProject = await addItem({
             title: 'New Project',
             description: '',
-            startDate: new Date().toISOString().split('T')[0], // Today's date
+            startDate: new Date().toISOString().split('T')[0],
             dueDate: '',
             priority: 'Medium',
             status: 'To Do',
             parentId: null
-        };
-        items.push(newProject);
-        saveItems();
+        });
         refreshAllTabs();
         openDetailSideview(newProject.id);
     });
@@ -597,5 +615,4 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCalendarTab();
         }
     });
-
 });
