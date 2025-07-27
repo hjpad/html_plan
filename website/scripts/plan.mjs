@@ -13,15 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let items = []; // Will be populated from Firestore after login
     let currentProjectsSort = 'name';
     let hideCompletedProjects = false;
-    let hideCompletedTasks = true; // Set to true by default as requested for Tasks tab
+    let hideCompletedTasks = true; // Set to true by default for Tasks tab
     let hideCompletedProjectTasks = false; // For nested tasks in project detail view
     let currentCalendarDate = new Date(); // Tracks the month/year currently displayed in the calendar
-    let currentCalendarView = 'timespan'; // 'timespan', 'duedate' (removed 'startdate' as requested)
+    let currentCalendarView = 'duedate'; // Default to 'duedate' as requested
+    let hideCompletedCalendar = false; // Default to false (completed are visible) as requested
     let globalSearchTerm = '';
 
     // --- DOM Elements ---
     const loginContainer = document.getElementById('login-container');
-    const appContainer = document.getElementById('main-app-wrapper'); // Changed to new wrapper
+    const appContainer = document.getElementById('main-app-wrapper'); // New top-level wrapper
     const loginForm = document.getElementById('loginForm');
     const loginEmailInput = document.getElementById('loginEmail');
     const loginPasswordInput = document.getElementById('loginPassword');
@@ -36,6 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const tasksTableBody = document.getElementById('tasksTable').querySelector('tbody');
     const calendarGrid = document.getElementById('calendarGrid');
     const mainTabs = document.getElementById('mainTabs');
+
+    // Calendar month/year select elements
+    const monthSelect = document.getElementById('monthSelect');
+    const yearSelect = document.getElementById('yearSelect');
+
 
     // Detail form fields for auto-saving
     const detailForm = document.getElementById('detailForm');
@@ -55,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const projectTasksList = document.getElementById('projectTasksList');
     const hideCompletedProjectTasksSwitch = document.getElementById('hideCompletedProjectTasksSwitch');
     const noProjectTasksMessage = document.getElementById('noProjectTasksMessage');
+
+    // Define status order for grouping in tasks tab
+    const statusOrder = { 'Do Now': 1, 'To Do': 2, 'On Hold': 3, 'Complete': 4 };
 
 
     // --- Offcanvas Resizing Logic ---
@@ -76,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentMax = getCalculatedMaxOffcanvasWidth();
         if (window.innerWidth <= 767.98) { // Mobile-specific handling
             detailOffcanvasElement.style.width = '100vw'; // Always 100vw on mobile
-            localStorage.setItem('offcanvasWidth', '100vw'); // Store for mobile
+            // localStorage.setItem('offcanvasWidth', '100vw'); // No need to store, always full
         } else { // Desktop handling
             width = Math.max(minOffcanvasWidth, Math.min(width, currentMax));
             detailOffcanvasElement.style.width = `${width}px`;
@@ -114,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isResizing) return;
         const deltaX = e.clientX - startX;
         // The handle is on the LEFT edge of the offcanvas
-        // dragging RIGHT (deltaX > 0) should INCREASE width
-        // dragging LEFT (deltaX < 0) should DECREASE width
-        const newWidth = startWidth - deltaX; // Corrected logic for handle on left
+        // dragging LEFT (deltaX < 0) increases width (startWidth - deltaX)
+        // dragging RIGHT (deltaX > 0) decreases width (startWidth - deltaX)
+        const newWidth = startWidth - deltaX;
         setOffcanvasWidth(newWidth);
     });
 
@@ -134,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.innerWidth <= 767.98) {
                 setOffcanvasWidth(mobileOffcanvasWidth); // Always full width on mobile
             } else {
-                // Readjust desktop width if window grows or shrinks past current width
                 const currentStoredWidth = parseFloat(localStorage.getItem('offcanvasWidth')) || 600;
                 setOffcanvasWidth(currentStoredWidth); // Re-apply saved width, clamped by new max
             }
@@ -156,8 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Failed to load items for user:", error);
                 items = [];
             }
+            // Initialize switch states
             document.getElementById('hideCompletedTasksSwitch').checked = hideCompletedTasks;
             document.getElementById('hideCompletedProjectTasksSwitch').checked = hideCompletedProjectTasks;
+            document.getElementById('hideCompletedCalendarSwitch').checked = hideCompletedCalendar; // Initialize calendar switch
+            
             refreshAllTabs();
         } else {
             console.log("User logged out.");
@@ -182,7 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const newItem = {
             id: generateId(),
-            ...itemData
+            // Set default priority to Low as requested
+            priority: 'Low',
+            status: 'To Do',
+            startDate: new Date().toISOString().split('T')[0], // Default to today
+            dueDate: '', // Default empty
+            description: '', // Default empty
+            ...itemData // Override defaults if provided
         };
         items.push(newItem);
         await saveItemToFirestore(auth.currentUser.uid, newItem);
@@ -281,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <select class="form-select form-select-sm status-select ${getStatusClass(project.status)}" data-item-id="${project.id}" data-field="status">
                         <option value="To Do" ${project.status === 'To Do' ? 'selected' : ''}>To Do</option>
                         <option value="Do Now" ${project.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
+                        <option value="On Hold" ${project.status === 'On Hold' ? 'selected' : ''}>On Hold</option>
                         <option value="Complete" ${project.status === 'Complete' ? 'selected' : ''}>Complete</option>
                     </select>
                 </td>
@@ -336,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <select class="form-select form-select-sm status-select ${getStatusClass(task.status)}" data-item-id="${task.id}" data-field="status">
                                 <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
                                 <option value="Do Now" ${task.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
+                                <option value="On Hold" ${task.status === 'On Hold' ? 'selected' : ''}>On Hold</option>
                                 <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
                             </select>
                         </td>
@@ -383,7 +402,6 @@ document.addEventListener('DOMContentLoaded', () => {
             allTasks = allTasks.filter(t => t.status !== 'Complete');
         }
 
-        const statusOrder = { 'Do Now': 1, 'To Do': 2, 'Complete': 3 };
         allTasks.sort((a, b) => {
             const statusDiff = statusOrder[a.status] - statusOrder[b.status];
             if (statusDiff !== 0) return statusDiff;
@@ -404,11 +422,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return acc;
         }, {});
 
+        // Iterate through statusOrder to maintain consistent grouping order
         Object.keys(statusOrder).forEach(statusGroupKey => {
             const tasksInGroup = groupedTasks[statusGroupKey];
             if (tasksInGroup && tasksInGroup.length > 0) {
                 const headerRow = tasksTableBody.insertRow();
-                headerRow.className = 'table-active status-group-header';
+                headerRow.className = `table-active status-group-header ${getStatusClass(statusGroupKey)}-header`; // Add color class
                 headerRow.dataset.bsToggle = 'collapse';
                 headerRow.dataset.bsTarget = `#status-${statusGroupKey.replace(/\s+/g, '')}-tasks`;
                 headerRow.setAttribute('aria-expanded', 'true');
@@ -453,6 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <select class="form-select form-select-sm status-select ${getStatusClass(task.status)}" data-item-id="${task.id}" data-field="status">
                                 <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
                                 <option value="Do Now" ${task.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
+                                <option value="On Hold" ${task.status === 'On Hold' ? 'selected' : ''}>On Hold</option>
                                 <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
                             </select>
                         </td>
@@ -493,13 +513,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderCalendarTab() {
         const calendarGrid = document.getElementById('calendarGrid');
+        // Clear existing days but keep headers
         Array.from(calendarGrid.children).filter(child => !child.classList.contains('calendar-day-header')).forEach(child => child.remove());
 
-        document.getElementById('currentMonthYear').textContent = currentCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        // Populate month select
+        monthSelect.innerHTML = '';
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        months.forEach((month, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = month;
+            if (index === currentCalendarDate.getMonth()) {
+                option.selected = true;
+            }
+            monthSelect.appendChild(option);
+        });
 
-        const yearSelect = document.getElementById('yearSelect');
-        const currentYear = new Date().getFullYear();
+        // Populate year select (already in place)
         yearSelect.innerHTML = '';
+        const currentYear = new Date().getFullYear();
         for (let i = currentYear - 5; i <= currentYear + 5; i++) {
             const option = document.createElement('option');
             option.value = i;
@@ -509,6 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             yearSelect.appendChild(option);
         }
+
 
         const firstDayOfMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1);
         const lastDayOfMonth = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 0);
@@ -535,8 +568,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let relevantItems = items.filter(item => {
-                // Only items with a defined due date, not completed, and passing search filter
-                if (!item.dueDate || item.status === 'Complete' || !applyGlobalSearchFilter(item)) return false;
+                // Filter: only items with a defined due date, and passing global search filter
+                if (!item.dueDate || !applyGlobalSearchFilter(item)) return false;
+                
+                // New: Filter by hideCompletedCalendar switch
+                if (hideCompletedCalendar && item.status === 'Complete') return false;
 
                 const startDate = item.startDate ? new Date(item.startDate + 'T00:00:00') : null;
                 const dueDate = new Date(item.dueDate + 'T00:00:00');
@@ -560,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             relevantItems.forEach(item => {
                 const taskSpan = document.createElement('span');
-                taskSpan.className = `calendar-day-task ${getPriorityClass(item.priority)}`; // Apply priority class for border
+                taskSpan.className = `calendar-day-task ${getPriorityClass(item.priority)}`; // Apply priority class for background
                 taskSpan.textContent = item.title;
                 taskSpan.dataset.itemId = item.id;
                 taskSpan.addEventListener('click', () => openDetailSideview(item.id));
@@ -631,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Set current value
-            detailTaskProjectSelect.value = item.parentId || ''; // Handle case where parentId might be null/undefined
+            detailTaskProjectSelect.value = item.parentId || '';
 
         } else { // It's a Project
             document.getElementById('detailOffcanvasLabel').textContent = 'Project Details';
@@ -676,6 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <select class="form-select form-select-sm status-select ${getStatusClass(task.status)}" data-item-id="${task.id}" data-field="status">
                         <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
                         <option value="Do Now" ${task.status === 'Do Now' ? 'selected' : ''}>Do Now</option>
+                        <option value="On Hold" ${task.status === 'On Hold' ? 'selected' : ''}>On Hold</option>
                         <option value="Complete" ${task.status === 'Complete' ? 'selected' : ''}>Complete</option>
                     </select>
                 </div>
@@ -780,11 +817,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (project) {
             const newTask = await addItem({
                 title: 'New Task for ' + project.title,
-                description: '',
-                startDate: new Date().toISOString().split('T')[0],
-                dueDate: '',
-                priority: 'Medium',
-                status: 'To Do',
                 parentId: projectId
             });
             refreshAllTabs();
@@ -796,11 +828,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addProjectBtn').addEventListener('click', async () => {
         const newProject = await addItem({
             title: 'New Project',
-            description: '',
-            startDate: new Date().toISOString().split('T')[0],
-            dueDate: '',
-            priority: 'Medium',
-            status: 'To Do',
             parentId: null
         });
         refreshAllTabs();
@@ -872,10 +899,18 @@ document.addEventListener('DOMContentLoaded', () => {
         currentCalendarDate = new Date();
         renderCalendarTab();
     });
-    document.getElementById('yearSelect').addEventListener('change', (e) => {
+    
+    // Calendar month/year select listeners
+    monthSelect.addEventListener('change', (e) => {
+        currentCalendarDate.setMonth(parseInt(e.target.value));
+        renderCalendarTab();
+    });
+    yearSelect.addEventListener('change', (e) => {
         currentCalendarDate.setFullYear(parseInt(e.target.value));
         renderCalendarTab();
     });
+
+    // Calendar View dropdown
     document.querySelectorAll('#calendarViewDropdown + .dropdown-menu .dropdown-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -883,6 +918,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('calendarViewDropdown').textContent = `View: ${e.target.textContent}`;
             renderCalendarTab();
         });
+    });
+
+    // Calendar Hide Completed Switch
+    document.getElementById('hideCompletedCalendarSwitch').addEventListener('change', (e) => {
+        hideCompletedCalendar = e.target.checked;
+        renderCalendarTab();
     });
 
     // Global Search

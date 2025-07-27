@@ -15,6 +15,7 @@ export function getPriorityClass(priority) {
 }
 
 export function getStatusClass(status) {
+    // Standardize status names for class names
     return `status-${status.toLowerCase().replace(/\s+/g, '')}`;
 }
 

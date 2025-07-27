@@ -63,14 +63,17 @@
     padding-right: 1.5rem; /* Make space for custom arrow */
     border: 1px solid var(--bs-border-color); /* Add border for selects */
 }
-/* Specific colors for inline selects */
+/* Specific colors for inline priority selects */
 .priority-select.priority-high { background-color: #f8d7da; color: #721c24; } /* Red for High */
 .priority-select.priority-medium { background-color: #ffeeba; color: #856404; } /* Yellow for Medium */
-.priority-select.priority-low { background-color: #e0e0e0; color: #6c757d; } /* Transparent/Grey for Low */
+/* Changed Low priority color */
+.priority-select.priority-low { background-color: #dee2e6; color: #495057; } /* Very light grey */
 
-.status-select.status-todo { background-color: #d1ecf1; color: #0c5460; } /* Blue for To Do */
-.status-select.status-donow { background-color: #fff3cd; color: #664d03; } /* Orange for Do Now */
-.status-select.status-complete { background-color: #d4edda; color: #155724; } /* Green for Complete */
+/* Specific colors for inline status selects */
+.status-select.status-todo { background-color: #ffeeba; color: #856404; } /* Yellow */
+.status-select.status-donow { background-color: #f8d7da; color: #721c24; } /* Red */
+.status-select.status-onhold { background-color: #dee2e6; color: #495057; } /* Light grey - same as low priority */
+.status-select.status-complete { background-color: #d4edda; color: #155724; } /* Green */
 
 
 .table-date-input {
@@ -81,18 +84,31 @@
     min-width: 120px; /* Ensure enough space for date */
 }
 
+/* Status Group Headers in Tasks Tab */
 .status-group-header {
     cursor: pointer;
+    font-weight: bold;
 }
 .status-group-header .collapse-toggle {
     display: inline-block;
     vertical-align: middle;
     margin-right: 8px;
 }
+.status-group-header.status-todo-header { background-color: #ffeeba; color: #856404; }
+.status-group-header.status-donow-header { background-color: #f8d7da; color: #721c24; }
+.status-group-header.status-onhold-header { background-color: #dee2e6; color: #495057; }
+.status-group-header.status-complete-header { background-color: #d4edda; color: #155724; }
+
 
 /* New: Main content area below header, beside offcanvas */
-#main-content-area {
+#main-layout-container {
     flex-grow: 1;
+    display: flex; /* Enable side-by-side for main content and offcanvas */
+    overflow: hidden; /* Prevent horizontal scroll when offcanvas is open */
+}
+
+#main-content-area {
+    flex-grow: 1; /* Take remaining space */
     display: flex;
     flex-direction: column;
     overflow: hidden; /* Prevent horizontal scroll from inner tab content */
@@ -101,20 +117,24 @@
 
 /* Sideview (Detail Panel) */
 .offcanvas-end {
-    /* Default desktop width (30% wider than previous 450px which is ~600px) */
-    width: 600px; /* Starting width on larger screens */
+    /* Default desktop width */
+    width: 600px;
     min-width: 300px; /* Minimum desktop width */
     max-width: 90vw; /* Maximum width relative to viewport */
 
     transform: translateX(100%); /* Initial state for offcanvas */
     transition: transform 0.3s ease-in-out; /* Smooth transition */
-    position: sticky; /* Keep it in the flow of #main-layout-container */
+    position: sticky; /* Keep it in the flow of #main-layout-container for desktop */
     top: 0; /* Align to the top of its flex container */
     right: 0;
     height: 100%; /* Fill parent container's height */
     box-shadow: -2px 0 5px rgba(0,0,0,0.05); /* Add shadow for separation */
     border-left: 1px solid var(--bs-border-color-translucent);
     background-color: var(--bs-body-bg); /* Ensure background is set */
+}
+/* When offcanvas is shown */
+.offcanvas-end.show {
+    transform: translateX(0%);
 }
 
 @media (max-width: 767.98px) { /* Mobile breakpoint for small screens (Bootstrap 'md' is 768px) */
@@ -178,13 +198,16 @@
     padding-right: 2rem;
     border: 1px solid var(--bs-border-color); /* Add border for selects */
 }
+/* Priority select in detail view */
 #detailPriority.priority-high { background-color: #dc3545; color: white; } /* Darker red */
 #detailPriority.priority-medium { background-color: #ffc107; color: black; } /* Darker yellow */
-#detailPriority.priority-low { background-color: #6c757d; color: white; } /* Darker grey */
+#detailPriority.priority-low { background-color: #adb5bd; color: black; } /* Darker grey */
 
-#detailStatus.status-todo { background-color: #0d6efd; color: white; } /* Bootstrap Blue */
-#detailStatus.status-donow { background-color: #fd7e14; color: white; } /* Bootstrap Orange */
-#detailStatus.status-complete { background-color: #198754; color: white; } /* Bootstrap Green */
+/* Status select in detail view */
+#detailStatus.status-todo { background-color: #ffc107; color: black; } /* Yellow */
+#detailStatus.status-donow { background-color: #dc3545; color: white; } /* Red */
+#detailStatus.status-onhold { background-color: #adb5bd; color: black; } /* Grey */
+#detailStatus.status-complete { background-color: #198754; color: white; } /* Green */
 
 
 /* Nested Task List in Project Detail View */
@@ -280,8 +303,8 @@
     margin-bottom: 5px;
 }
 .calendar-day-task {
-    background-color: var(--bs-primary);
-    color: white;
+    /* Changed from border-left to full background */
+    color: white; /* Default text color on colored background */
     padding: 2px 5px;
     border-radius: 3px;
     font-size: 0.75em;
@@ -291,16 +314,15 @@
     text-overflow: ellipsis;
     cursor: pointer;
     transition: background-color 0.2s;
-    border-left: 5px solid transparent; /* For priority color */
-    padding-left: 3px; /* Adjust padding for border */
+    /* Removed border-left property */
 }
 .calendar-day-task:hover {
     filter: brightness(1.1); /* Slightly brighter on hover */
 }
-/* Calendar task priority colors */
-.calendar-day-task.priority-high { border-left-color: #dc3545; } /* Red */
-.calendar-day-task.priority-medium { border-left-color: #ffc107; } /* Yellow */
-.calendar-day-task.priority-low { border-left-color: #6c757d; } /* Grey */
+/* Calendar task priority colors (as backgrounds now) */
+.calendar-day-task.priority-high { background-color: #dc3545; } /* Red */
+.calendar-day-task.priority-medium { background-color: #ffc107; color: black; } /* Yellow */
+.calendar-day-task.priority-low { background-color: #adb5bd; color: black; } /* Grey */
 
 
 /* Highlight today */
@@ -310,9 +332,29 @@
 }
 
 /* Dark mode adjustments */
-[data-bs-theme="dark"] .priority-select.priority-low,
-[data-bs-theme="dark"] #detailPriority.priority-low { background-color: #495057; color: #dee2e6; border-color: var(--bs-border-color-translucent);}
-[data-bs-theme="dark"] .status-select, [data-bs-theme="dark"] #detailStatus, [data-bs-theme="dark"] #detailTaskProjectSelect { background-color: var(--bs-secondary-bg); border-color: var(--bs-border-color-translucent); }
+/* Priority selects in dark mode */
+[data-bs-theme="dark"] .priority-select.priority-low { background-color: #495057; color: #dee2e6; border-color: var(--bs-border-color-translucent);}
+[data-bs-theme="dark"] #detailPriority.priority-low { background-color: #343a40; color: #dee2e6; } /* Darker for detail view */
+
+/* Status selects in dark mode */
+[data-bs-theme="dark"] .status-select.status-todo { background-color: #d19a00; color: white; } /* Darker yellow */
+[data-bs-theme="dark"] .status-select.status-donow { background-color: #be2e2e; color: white; } /* Darker red */
+[data-bs-theme="dark"] .status-select.status-onhold { background-color: #495057; color: #dee2e6; } /* Dark grey */
+[data-bs-theme="dark"] .status-select.status-complete { background-color: #127435; color: white; } /* Darker green */
+
+/* Status group headers in dark mode */
+[data-bs-theme="dark"] .status-group-header.status-todo-header { background-color: #d19a00; color: white; }
+[data-bs-theme="dark"] .status-group-header.status-donow-header { background-color: #be2e2e; color: white; }
+[data-bs-theme="dark"] .status-group-header.status-onhold-header { background-color: #495057; color: #dee2e6; }
+[data-bs-theme="dark"] .status-group-header.status-complete-header { background-color: #127435; color: white; }
+
+/* Detail view selects in dark mode */
+[data-bs-theme="dark"] #detailStatus.status-todo { background-color: #d19a00; color: white; }
+[data-bs-theme="dark"] #detailStatus.status-donow { background-color: #be2e2e; color: white; }
+[data-bs-theme="dark"] #detailStatus.status-onhold { background-color: #495057; color: #dee2e6; }
+[data-bs-theme="dark"] #detailStatus.status-complete { background-color: #127435; color: white; }
+
+
 [data-bs-theme="dark"] .table-date-input { background-color: var(--bs-secondary-bg); border-color: var(--bs-border-color-translucent); }
 
 
@@ -329,13 +371,15 @@
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f8f9fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e");
 }
 
-/* Specific flexbox behavior for header items on smaller screens */
+/* Header responsiveness */
 @media (max-width: 575.98px) { /* xs to sm breakpoint */
     header {
         flex-direction: column;
         align-items: flex-start;
+        padding-top: 15px; /* More vertical padding */
+        padding-bottom: 15px;
     }
-    #app-name { order: 1; }
+    #app-name { order: 1; display: none; } /* Hide app name on mobile */
     #user-controls { order: 2; width: 100%; justify-content: flex-end; } /* User icon to right on its line */
     #search-field { order: 3; width: 100%; margin-top: 10px; } /* Search on a new line, centered */
     #search-field .form-control { max-width: 100%; }
@@ -347,7 +391,7 @@
         align-items: center;
         flex-wrap: wrap; /* Allow wrapping if content is too wide */
     }
-    #app-name { order: 1; flex-shrink: 0; } /* Keep app name left */
+    #app-name { order: 1; flex-shrink: 0; display: block; } /* Show app name on small-md desktop */
     #search-field { order: 2; flex-grow: 1; margin: 0 10px; } /* Search in middle */
     #user-controls { order: 3; flex-shrink: 0; } /* Keep user controls right */
     #search-field .form-control { margin: 0; } /* Remove center margin */
@@ -359,7 +403,7 @@
         align-items: center;
         flex-wrap: nowrap; /* No wrapping on large screens */
     }
-    #app-name { order: 1; flex-shrink: 0; }
+    #app-name { order: 1; flex-shrink: 0; display: block; }
     #search-field { order: 2; flex-grow: 1; margin: 0 20px; } /* More space around search */
     #user-controls { order: 3; flex-shrink: 0; }
     #search-field .form-control { margin: 0 auto; } /* Center search on large screens */

@@ -45,9 +45,9 @@
 
     <!-- Main App Wrapper (Contains Header and Main Content/Detail View) -->
     <div id="main-app-wrapper" style="display: none;" class="d-flex flex-column flex-grow-1">
-        <header class="d-flex align-items-center">
-            <div id="app-name" class="order-1">html_plan</div>
-            <div id="search-field" class="input-group order-2 flex-grow-1 mx-2 mx-md-3">
+        <header class="d-flex align-items-center p-2 p-md-3">
+            <div id="app-name" class="order-1 d-none d-md-block">html_plan</div>
+            <div id="search-field" class="input-group order-2 flex-grow-1 mx-md-3">
                 <input type="text" class="form-control" placeholder="Search projects or tasks..." id="globalSearchInput">
                 <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn"><i class="bi bi-x-lg"></i></button>
             </div>
@@ -175,12 +175,18 @@
                                 <button class="btn btn-outline-secondary" id="nextMonthBtn"><i class="bi bi-chevron-right"></i></button>
                                 <button class="btn btn-primary" id="todayBtn">Today</button>
                             </div>
-                            <h4 id="currentMonthYear" class="mb-0 text-center flex-grow-1">Month Year</h4>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <select class="form-select w-auto" id="monthSelect"></select>
                                 <select class="form-select w-auto" id="yearSelect"></select>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="hideCompletedCalendarSwitch">
+                                    <label class="form-check-label" for="hideCompletedCalendarSwitch">Hide Completed</label>
+                                </div>
                                 <div class="dropdown">
                                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="calendarViewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        View: Time Span
+                                        View: Due Date
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="calendarViewDropdown">
                                         <li><a class="dropdown-item" href="#" data-view="timespan">Time Span</a></li>
@@ -253,6 +259,7 @@
                                 <select class="form-select" id="detailStatus">
                                     <option value="To Do">To Do</option>
                                     <option value="Do Now">Do Now</option>
+                                    <option value="On Hold">On Hold</option>
                                     <option value="Complete">Complete</option>
                                 </select>
                             </div>
