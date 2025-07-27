@@ -16,24 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let hideCompletedTasks = true; // Set to true by default as requested for Tasks tab
     let hideCompletedProjectTasks = false; // For nested tasks in project detail view
     let currentCalendarDate = new Date(); // Tracks the month/year currently displayed in the calendar
-    let currentCalendarView = 'timespan'; // 'timespan', 'duedate'
+    let currentCalendarView = 'timespan'; // 'timespan', 'duedate' (removed 'startdate' as requested)
     let globalSearchTerm = '';
 
     // --- DOM Elements ---
     const loginContainer = document.getElementById('login-container');
-    const appContainer = document.getElementById('app-container');
+    const appContainer = document.getElementById('main-app-wrapper'); // Changed to new wrapper
     const loginForm = document.getElementById('loginForm');
     const loginEmailInput = document.getElementById('loginEmail');
     const loginPasswordInput = document.getElementById('loginPassword');
     const registerBtn = document.getElementById('registerBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    // Dark mode elements are handled by initDarkMode from utils.mjs
-
+    
     const detailOffcanvasElement = document.getElementById('detailOffcanvas');
-    const detailOffcanvas = new bootstrap.Offcanvas(detailOffcanvasElement, {
-        backdrop: false, // Allow interaction with main content
-        scroll: true     // Allow body scrolling when offcanvas is open
-    });
+    // Offcanvas instantiated later to control its initial width based on saved preferences
     const offcanvasResizeHandle = document.querySelector('.offcanvas-resize-handle');
 
     const projectsTableBody = document.getElementById('projectsTable').querySelector('tbody');
@@ -46,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailItemIdInput = document.getElementById('detailItemId');
     const detailItemTypeInput = document.getElementById('detailItemType');
     const detailTitleInput = document.getElementById('detailTitle');
-    const detailTaskProjectField = document.getElementById('detailTaskProjectField'); // New container for task's project dropdown
-    const detailTaskProjectSelect = document.getElementById('detailTaskProjectSelect'); // New task's project dropdown
+    const detailTaskProjectField = document.getElementById('detailTaskProjectField');
+    const detailTaskProjectSelect = document.getElementById('detailTaskProjectSelect');
     const detailStartDateInput = document.getElementById('detailStartDate');
     const detailDueDateInput = document.getElementById('detailDueDate');
     const detailPrioritySelect = document.getElementById('detailPriority');
@@ -60,32 +56,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const hideCompletedProjectTasksSwitch = document.getElementById('hideCompletedProjectTasksSwitch');
     const noProjectTasksMessage = document.getElementById('noProjectTasksMessage');
 
+
     // --- Offcanvas Resizing Logic ---
     let isResizing = false;
     let startX;
     let startWidth;
     const minOffcanvasWidth = 300; // Minimum width for the offcanvas
-    const maxOffcanvasWidth = window.innerWidth * 0.9; // Max 90% of screen width
+    const maxOffcanvasDesktopWidth = window.innerWidth * 0.9; // Max 90% of screen width on desktop
+    const mobileOffcanvasWidth = window.innerWidth; // Full width on mobile
+
+    // Store the Bootstrap Offcanvas instance
+    let detailOffcanvas;
+
+    function getCalculatedMaxOffcanvasWidth() {
+        return window.innerWidth > 767.98 ? maxOffcanvasDesktopWidth : mobileOffcanvasWidth;
+    }
 
     function setOffcanvasWidth(width) {
-        // Ensure width is within limits
-        width = Math.max(minOffcanvasWidth, Math.min(width, maxOffcanvasWidth));
-        detailOffcanvasElement.style.width = `${width}px`;
-        localStorage.setItem('offcanvasWidth', width);
+        let currentMax = getCalculatedMaxOffcanvasWidth();
+        if (window.innerWidth <= 767.98) { // Mobile-specific handling
+            detailOffcanvasElement.style.width = '100vw'; // Always 100vw on mobile
+            localStorage.setItem('offcanvasWidth', '100vw'); // Store for mobile
+        } else { // Desktop handling
+            width = Math.max(minOffcanvasWidth, Math.min(width, currentMax));
+            detailOffcanvasElement.style.width = `${width}px`;
+            localStorage.setItem('offcanvasWidth', width);
+        }
     }
 
-    // Load saved width on initialization
-    const savedOffcanvasWidth = localStorage.getItem('offcanvasWidth');
-    if (savedOffcanvasWidth) {
-        setOffcanvasWidth(parseFloat(savedOffcanvasWidth));
-    } else {
-        // Default to 600px if not saved, or 90vw on smaller screens
-        const defaultWidth = window.innerWidth > 768 ? 600 : window.innerWidth * 0.9;
-        setOffcanvasWidth(defaultWidth);
-    }
+    // Initialize offcanvas and load saved width
+    const initializeOffcanvas = () => {
+        detailOffcanvas = new bootstrap.Offcanvas(detailOffcanvasElement, {
+            backdrop: false, // Allow interaction with main content
+            scroll: true     // Allow body scrolling when offcanvas is open
+        });
 
+        const savedOffcanvasWidth = localStorage.getItem('offcanvasWidth');
+        if (savedOffcanvasWidth && window.innerWidth > 767.98) { // Only apply saved width on desktop
+            setOffcanvasWidth(parseFloat(savedOffcanvasWidth));
+        } else if (window.innerWidth <= 767.98) {
+            setOffcanvasWidth(mobileOffcanvasWidth); // Force full width on mobile
+        } else {
+            setOffcanvasWidth(600); // Default desktop width
+        }
+    };
 
     offcanvasResizeHandle.addEventListener('mousedown', (e) => {
+        if (window.innerWidth <= 767.98) return; // Disable resize on mobile
         isResizing = true;
         startX = e.clientX;
         startWidth = detailOffcanvasElement.offsetWidth;
@@ -95,8 +112,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
-        const width = startWidth - (e.clientX - startX);
-        setOffcanvasWidth(width);
+        const deltaX = e.clientX - startX;
+        // The handle is on the LEFT edge of the offcanvas
+        // dragging RIGHT (deltaX > 0) should INCREASE width
+        // dragging LEFT (deltaX < 0) should DECREASE width
+        const newWidth = startWidth - deltaX; // Corrected logic for handle on left
+        setOffcanvasWidth(newWidth);
     });
 
     document.addEventListener('mouseup', () => {
@@ -107,13 +128,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle window resize to adjust max-width if necessary
+    // Handle window resize to adjust max-width and force mobile width
     window.addEventListener('resize', () => {
-        if (!isResizing && detailOffcanvasElement.style.display !== 'none') { // Only adjust if not resizing and visible
-            const currentWidth = detailOffcanvasElement.offsetWidth;
-            const newMax = window.innerWidth * 0.9;
-            if (currentWidth > newMax) {
-                setOffcanvasWidth(newMax);
+        if (!isResizing) {
+            if (window.innerWidth <= 767.98) {
+                setOffcanvasWidth(mobileOffcanvasWidth); // Always full width on mobile
+            } else {
+                // Readjust desktop width if window grows or shrinks past current width
+                const currentStoredWidth = parseFloat(localStorage.getItem('offcanvasWidth')) || 600;
+                setOffcanvasWidth(currentStoredWidth); // Re-apply saved width, clamped by new max
             }
         }
     });
@@ -124,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             console.log("User logged in:", user.email, "UID:", user.uid);
             loginContainer.style.display = 'none';
-            appContainer.style.display = 'flex';
+            appContainer.style.display = 'flex'; // Show main app wrapper
 
             try {
                 items = await loadItemsFromFirestore(user.uid);
@@ -133,17 +156,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Failed to load items for user:", error);
                 items = [];
             }
-            // Set initial state for hideCompletedTasks switch
             document.getElementById('hideCompletedTasksSwitch').checked = hideCompletedTasks;
-            document.getElementById('hideCompletedProjectTasksSwitch').checked = hideCompletedProjectTasks; // Initialize this too
+            document.getElementById('hideCompletedProjectTasksSwitch').checked = hideCompletedProjectTasks;
             refreshAllTabs();
         } else {
             console.log("User logged out.");
             loginContainer.style.display = 'flex';
-            appContainer.style.display = 'none';
+            appContainer.style.display = 'none'; // Hide main app wrapper
             loginForm.reset();
             document.getElementById('loginMessage').textContent = '';
-            // Clear current items and reset app state when logged out
             items = [];
             refreshAllTabs();
             detailOffcanvas.hide(); // Hide detail view on logout
@@ -209,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyGlobalSearchFilter(item) {
         if (!globalSearchTerm) return true;
         const searchLower = globalSearchTerm.toLowerCase();
+        // Search in title AND description
         return item.title.toLowerCase().includes(searchLower) ||
                (item.description && item.description.toLowerCase().includes(searchLower));
     }
@@ -268,7 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const field = e.target.dataset.field;
                     const value = e.target.value;
                     await updateItemData(e.target.dataset.itemId, { [field]: value });
-                    // No need to call renderProjectsTab() here as refreshAllTabs() is called from updateItemData
                 });
             });
 
@@ -324,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             const field = e.target.dataset.field;
                             const value = e.target.value;
                             await updateItemData(e.target.dataset.itemId, { [field]: value });
-                            // No need to call renderProjectsTab() here as refreshAllTabs() is called from updateItemData
                         });
                     });
 
@@ -378,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Grouping logic for Tasks Tab
         const groupedTasks = allTasks.reduce((acc, task) => {
             acc[task.status] = acc[task.status] || [];
             acc[task.status].push(task);
@@ -388,7 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(statusOrder).forEach(statusGroupKey => {
             const tasksInGroup = groupedTasks[statusGroupKey];
             if (tasksInGroup && tasksInGroup.length > 0) {
-                // Status Group Header Row with collapse toggle
                 const headerRow = tasksTableBody.insertRow();
                 headerRow.className = 'table-active status-group-header';
                 headerRow.dataset.bsToggle = 'collapse';
@@ -401,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <strong>${statusGroupKey}</strong>
                     </td>`;
 
-                // Nested row for tasks under this status
                 const tasksWrapperRow = tasksTableBody.insertRow();
                 tasksWrapperRow.innerHTML = `<td colspan="6" class="p-0">
                     <div class="collapse show" id="status-${statusGroupKey.replace(/\s+/g, '')}-tasks">
@@ -445,7 +462,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             const field = e.target.dataset.field;
                             const value = e.target.value;
                             await updateItemData(e.target.dataset.itemId, { [field]: value });
-                            // No need to call renderTasksTab() here as refreshAllTabs() is called from updateItemData
                         });
                     });
 
@@ -458,7 +474,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Attach collapse listeners for status headers
         tasksTableBody.querySelectorAll('.status-group-header').forEach(header => {
             const icon = header.querySelector('.collapse-toggle i');
             const targetId = header.dataset.bsTarget;
@@ -520,26 +535,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let relevantItems = items.filter(item => {
-                // Filter: only items with a defined due date
+                // Only items with a defined due date, not completed, and passing search filter
                 if (!item.dueDate || item.status === 'Complete' || !applyGlobalSearchFilter(item)) return false;
 
                 const startDate = item.startDate ? new Date(item.startDate + 'T00:00:00') : null;
-                const dueDate = new Date(item.dueDate + 'T00:00:00'); // Due date is guaranteed here
+                const dueDate = new Date(item.dueDate + 'T00:00:00');
 
                 if (currentCalendarView === 'duedate') {
                     return dueDate.toDateString() === dayDate.toDateString();
-                } else { // 'timespan' (now the only other option)
+                } else { // 'timespan'
                     const start = startDate || dueDate; // If start date not present, use due date as start of span
                     return dayDate.setHours(0,0,0,0) >= start.setHours(0,0,0,0) && dayDate.setHours(0,0,0,0) <= dueDate.setHours(0,0,0,0);
                 }
             });
 
             relevantItems.sort((a,b) => {
-                // Sort by due date primarily
                 const dateA = new Date(a.dueDate);
                 const dateB = new Date(b.dueDate);
                 if (dateA - dateB !== 0) return dateA - dateB;
-                // Then by priority (High first)
                 const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
                 return priorityOrder[a.priority] - priorityOrder[b.priority];
             });
@@ -580,10 +593,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = items.find(i => i.id === itemId);
         if (!item) return;
 
-        // Populate common fields
         detailItemIdInput.value = item.id;
         detailItemTypeInput.value = item.parentId ? 'task' : 'project';
         document.getElementById('detailItemParentId').value = item.parentId || '';
+
         detailTitleInput.value = item.title;
         detailStartDateInput.value = item.startDate || '';
         detailDueDateInput.value = item.dueDate || '';
@@ -591,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
         detailStatusSelect.value = item.status;
         detailDescriptionInput.value = item.description;
 
-        // Apply priority class to the select element itself
+        // Apply priority/status class to the select element itself
         detailPrioritySelect.className = `form-select ${getPriorityClass(item.priority)}`;
         detailStatusSelect.className = `form-select ${getStatusClass(item.status)}`;
 
@@ -600,13 +613,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Logic for Task vs Project specific fields in detail view
         if (item.parentId) { // It's a Task
             document.getElementById('detailOffcanvasLabel').textContent = 'Task Details';
-            detailTaskProjectField.style.display = 'block';
+            detailTaskProjectField.style.display = 'block'; // Show project dropdown for tasks
             projectTasksListContainer.style.display = 'none'; // Hide project task list
             addNestedTaskBtn.style.display = 'none';
 
-            // Populate project dropdown
-            const projects = items.filter(p => !p.parentId);
-            detailTaskProjectSelect.innerHTML = '<option value="">-- Select Project --</option>';
+            // Populate project dropdown for tasks
+            const projects = items.filter(p => !p.parentId).sort((a, b) => a.title.localeCompare(b.title)); // Sort projects
+            detailTaskProjectSelect.innerHTML = '<option value="">-- Select Project --</option>'; // Allow unassigning
             projects.forEach(project => {
                 const option = document.createElement('option');
                 option.value = project.id;
@@ -618,11 +631,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Set current value
-            detailTaskProjectSelect.value = item.parentId;
+            detailTaskProjectSelect.value = item.parentId || ''; // Handle case where parentId might be null/undefined
 
         } else { // It's a Project
             document.getElementById('detailOffcanvasLabel').textContent = 'Project Details';
-            detailTaskProjectField.style.display = 'none';
+            detailTaskProjectField.style.display = 'none'; // Hide project dropdown for projects
             projectTasksListContainer.style.display = 'block'; // Show project task list
             addNestedTaskBtn.style.display = 'inline-block'; // Show "Add Task" for projects
 
@@ -667,18 +680,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </select>
                 </div>
             `;
-            // Attach event listeners for inline editing within the nested list
             li.querySelectorAll('select').forEach(select => {
                 select.addEventListener('change', async (e) => {
                     const field = e.target.dataset.field;
                     const value = e.target.value;
                     await updateItemData(e.target.dataset.itemId, { [field]: value });
-                    // No need for separate render call as updateItemData calls refreshAllTabs
                 });
             });
-            // Allow clicking the list item itself to open detail view
             li.addEventListener('click', (e) => {
-                if (!e.target.closest('select')) { // Don't open if clicking the select
+                if (!e.target.closest('select')) {
                     openDetailSideview(task.id);
                 }
             });
@@ -696,9 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = loginPasswordInput.value;
         try {
             await loginUser(email, password);
-        } catch (error) {
-            // Error messages handled by auth.mjs
-        }
+        } catch (error) { /* Handled by auth.mjs */ }
     });
 
     // Register Button Click
@@ -707,9 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = loginPasswordInput.value;
         try {
             await registerUser(email, password);
-        } catch (error) {
-            // Error messages handled by auth.mjs
-        }
+        } catch (error) { /* Handled by auth.mjs */ }
     });
 
     // Logout Button
@@ -729,31 +735,28 @@ document.addEventListener('DOMContentLoaded', () => {
     detailPrioritySelect.addEventListener('change', async (e) => {
         const selectedPriority = e.target.value;
         await updateItemData(detailItemIdInput.value, { priority: selectedPriority });
-        // Update the select's own class for color immediately
         detailPrioritySelect.className = `form-select ${getPriorityClass(selectedPriority)}`;
     });
 
     detailStatusSelect.addEventListener('change', async (e) => {
         const selectedStatus = e.target.value;
         await updateItemData(detailItemIdInput.value, { status: selectedStatus });
-        detailStatusSelect.className = `form-select ${getStatusClass(selectedStatus)}`; // Update class for color
+        detailStatusSelect.className = `form-select ${getStatusClass(selectedStatus)}`;
     });
 
-    // New: Handle change for task's project dropdown
     detailTaskProjectSelect.addEventListener('change', async (e) => {
         const selectedProjectId = e.target.value;
         await updateItemData(detailItemIdInput.value, { parentId: selectedProjectId || null });
     });
 
-    // New: Hide Completed switch for nested tasks in project detail view
+    // Hide Completed switch for nested tasks in project detail view
     hideCompletedProjectTasksSwitch.addEventListener('change', () => {
         hideCompletedProjectTasks = hideCompletedProjectTasksSwitch.checked;
         const currentDetailedItemId = detailItemIdInput.value;
         if (detailItemTypeInput.value === 'project') {
-             renderNestedProjectTasks(currentDetailedItemId);
+             renderNestedProjectTasks(currentDetailedItemId); // Re-render only the nested list
         }
     });
-
 
     document.getElementById('deleteItemBtn').addEventListener('click', async () => {
         const itemId = detailItemIdInput.value;
@@ -785,8 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 parentId: projectId
             });
             refreshAllTabs();
-            // Re-open current project to update its nested task list
-            openDetailSideview(projectId); // This will re-render the nested list
+            openDetailSideview(projectId); // Re-open current project to update its nested task list
         }
     });
 
@@ -896,11 +898,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set up event listeners for tab changes to re-render relevant content
     mainTabs.addEventListener('shown.bs.tab', function (event) {
-        // Hide detail offcanvas if it's currently open and a tab changes.
-        // This is a design choice; you might want it to stay open always.
-        // For uninterrupted browsing, this specific hide might be removed.
-        // detailOffcanvas.hide(); // Keep it commented for uninterrupted browsing
-
         const activeTabId = event.target.id;
         if (activeTabId === 'projects-tab') {
             renderProjectsTab();
@@ -910,5 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCalendarTab();
         }
     });
+
+    // Initialize offcanvas after all elements are present and event listeners are set
+    initializeOffcanvas();
 
 });

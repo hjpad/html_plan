@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTML_Plan</title>
-	<link rel="icon" type="image/x-icon" href="images/favicons/favicon.ico" />
-	<link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png" />
-	<link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png" />
-	<link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png" />
-	<link rel="icon" type="image/png" sizes="96x96" href="images/favicons/favicon-96x96.png" />
-	<link rel="icon" type="image/png" sizes="144x144" href="images/favicons/favicon-144x144.png" />
-	<link rel="icon" type="image/png" sizes="192x192" href="images/favicons/android-chrome-192x192.png" />
-	<link rel="icon" type="image/png" sizes="512x512" href="images/favicons/android-chrome-512x512.png" />
-	<link rel="manifest" href="app.webmanifest" />
+    <link rel="icon" type="image/x-icon" href="images/favicons/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="images/favicons/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="144x144" href="images/favicons/favicon-144x144.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="images/favicons/android-chrome-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="images/favicons/android-chrome-512x512.png" />
+    <link rel="manifest" href="app.webmanifest" />
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Bootstrap Icons -->
@@ -42,15 +43,15 @@
         </div>
     </div>
 
-    <!-- Main App Container (Hidden by default, shown after login) -->
-    <div id="app-container" style="display: none;">
-        <header>
-            <div id="app-name">html_plan</div>
-            <div id="search-field" class="input-group">
+    <!-- Main App Wrapper (Contains Header and Main Content/Detail View) -->
+    <div id="main-app-wrapper" style="display: none;" class="d-flex flex-column flex-grow-1">
+        <header class="d-flex align-items-center">
+            <div id="app-name" class="order-1">html_plan</div>
+            <div id="search-field" class="input-group order-2 flex-grow-1 mx-2 mx-md-3">
                 <input type="text" class="form-control" placeholder="Search projects or tasks..." id="globalSearchInput">
                 <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn"><i class="bi bi-x-lg"></i></button>
             </div>
-            <div id="user-controls">
+            <div id="user-controls" class="order-3">
                 <div class="dropdown">
                     <button class="btn btn-light" type="button" id="userIconDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person-circle fs-4"></i>
@@ -70,222 +71,228 @@
             </div>
         </header>
 
-        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects-content" type="button" role="tab" aria-controls="projects-content" aria-selected="true">Projects</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks-content" type="button" role="tab" aria-controls="tasks-content" aria-selected="false">Tasks</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-content" type="button" role="tab" aria-controls="calendar-content" aria-selected="false">Calendar</button>
-            </li>
-        </ul>
+        <!-- Container for Main Content Area and Detail Offcanvas -->
+        <div id="main-layout-container" class="d-flex flex-grow-1">
+            <!-- Main Content Area (Tabs) -->
+            <div id="main-content-area" class="d-flex flex-column flex-grow-1">
+                <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects-content" type="button" role="tab" aria-controls="projects-content" aria-selected="true">Projects</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks-content" type="button" role="tab" aria-controls="tasks-content" aria-selected="false">Tasks</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-content" type="button" role="tab" aria-controls="calendar-content" aria-selected="false">Calendar</button>
+                    </li>
+                </ul>
 
-        <div class="tab-content flex-grow-1" id="mainTabContent">
-            <!-- Projects Tab Content -->
-            <div class="tab-pane fade show active" id="projects-content" role="tabpanel" aria-labelledby="projects-tab">
-                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                    <button class="btn btn-primary" id="addProjectBtn">
-                        <i class="bi bi-plus-lg"></i> Add Project
-                    </button>
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="projectsSortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Sort by: Name
+                <div class="tab-content flex-grow-1" id="mainTabContent">
+                    <!-- Projects Tab Content -->
+                    <div class="tab-pane fade show active" id="projects-content" role="tabpanel" aria-labelledby="projects-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <button class="btn btn-primary" id="addProjectBtn">
+                                <i class="bi bi-plus-lg"></i> Add Project
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="projectsSortDropdown">
-                                <li><a class="dropdown-item" href="#" data-sort="name">Name</a></li>
-                                <li><a class="dropdown-item" href="#" data-sort="date">Due Date</a></li>
-                            </ul>
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="projectsSortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Sort by: Name
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="projectsSortDropdown">
+                                        <li><a class="dropdown-item" href="#" data-sort="name">Name</a></li>
+                                        <li><a class="dropdown-item" href="#" data-sort="date">Due Date</a></li>
+                                    </ul>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="hideCompletedProjectsSwitch">
+                                    <label class="form-check-label" for="hideCompletedProjectsSwitch">Hide Completed</label>
+                                </div>
+                                <div class="btn-group" role="group" aria-label="Projects collapse/expand">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllProjectsBtn" title="Collapse all projects"><i class="bi bi-dash-square"></i></button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="expandAllProjectsBtn" title="Expand all projects"><i class="bi bi-plus-square"></i></button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="hideCompletedProjectsSwitch">
-                            <label class="form-check-label" for="hideCompletedProjectsSwitch">Hide Completed</label>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped" id="projectsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%;"></th> <!-- For Collapse Toggle -->
+                                        <th style="width: 30%;">Title</th>
+                                        <th style="width: 15%;">Start Date</th>
+                                        <th style="width: 15%;">Due Date</th>
+                                        <th style="width: 10%;">Priority</th>
+                                        <th style="width: 15%;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Projects and Tasks will be rendered here by JS -->
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="btn-group" role="group" aria-label="Projects collapse/expand">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllProjectsBtn" title="Collapse all projects"><i class="bi bi-dash-square"></i></button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="expandAllProjectsBtn" title="Expand all projects"><i class="bi bi-plus-square"></i></button>
+                        <p id="noProjectsMessage" class="text-center text-muted mt-5" style="display:none;">No projects yet. Click "Add Project" to get started!</p>
+                    </div>
+
+                    <!-- Tasks Tab Content -->
+                    <div class="tab-pane fade" id="tasks-content" role="tabpanel" aria-labelledby="tasks-tab">
+                        <div class="d-flex justify-content-end mb-3 gap-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="hideCompletedTasksSwitch">
+                                <label class="form-check-label" for="hideCompletedTasksSwitch">Hide Completed</label>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="Tasks collapse/expand">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllTasksBtn" title="Collapse all status groups"><i class="bi bi-dash-square"></i></button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="expandAllTasksBtn" title="Expand all status groups"><i class="bi bi-plus-square"></i></button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped" id="tasksTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 30%;">Title</th>
+                                        <th style="width: 20%;">Project</th>
+                                        <th style="width: 15%;">Start Date</th>
+                                        <th style="width: 15%;">Due Date</th>
+                                        <th style="width: 10%;">Priority</th>
+                                        <th style="width: 10%;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Tasks will be rendered here by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <p id="noTasksMessage" class="text-center text-muted mt-5" style="display:none;">No tasks yet. Add tasks from Project detail view.</p>
+                    </div>
+
+                    <!-- Calendar Tab Content -->
+                    <div class="tab-pane fade" id="calendar-content" role="tabpanel" aria-labelledby="calendar-tab">
+                        <div class="calendar-nav">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary" id="prevMonthBtn"><i class="bi bi-chevron-left"></i></button>
+                                <button class="btn btn-outline-secondary" id="nextMonthBtn"><i class="bi bi-chevron-right"></i></button>
+                                <button class="btn btn-primary" id="todayBtn">Today</button>
+                            </div>
+                            <h4 id="currentMonthYear" class="mb-0 text-center flex-grow-1">Month Year</h4>
+                            <div class="d-flex gap-2">
+                                <select class="form-select w-auto" id="yearSelect"></select>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="calendarViewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        View: Time Span
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="calendarViewDropdown">
+                                        <li><a class="dropdown-item" href="#" data-view="timespan">Time Span</a></li>
+                                        <li><a class="dropdown-item" href="#" data-view="duedate">Only Due Date</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            <!-- Day headers -->
+                            <div class="calendar-day-header">Sun</div>
+                            <div class="calendar-day-header">Mon</div>
+                            <div class="calendar-day-header">Tue</div>
+                            <div class="calendar-day-header">Wed</div>
+                            <div class="calendar-day-header">Thu</div>
+                            <div class="calendar-day-header">Fri</div>
+                            <div class="calendar-day-header">Sat</div>
+                            <!-- Calendar days will be rendered here by JS -->
                         </div>
                     </div>
                 </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped" id="projectsTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 5%;"></th> <!-- For Collapse Toggle -->
-                                <th style="width: 30%;">Title</th>
-                                <th style="width: 15%;">Start Date</th>
-                                <th style="width: 15%;">Due Date</th>
-                                <th style="width: 10%;">Priority</th>
-                                <th style="width: 15%;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Projects and Tasks will be rendered here by JS -->
-                        </tbody>
-                    </table>
-                </div>
-                <p id="noProjectsMessage" class="text-center text-muted mt-5" style="display:none;">No projects yet. Click "Add Project" to get started!</p>
             </div>
 
-            <!-- Tasks Tab Content -->
-            <div class="tab-pane fade" id="tasks-content" role="tabpanel" aria-labelledby="tasks-tab">
-                <div class="d-flex justify-content-end mb-3 gap-3">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="hideCompletedTasksSwitch">
-                        <label class="form-check-label" for="hideCompletedTasksSwitch">Hide Completed</label>
-                    </div>
-                    <div class="btn-group" role="group" aria-label="Tasks collapse/expand">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="collapseAllTasksBtn" title="Collapse all status groups"><i class="bi bi-dash-square"></i></button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="expandAllTasksBtn" title="Expand all status groups"><i class="bi bi-plus-square"></i></button>
-                    </div>
+            <!-- Sideview (Offcanvas) for Task/Project Details -->
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="detailOffcanvas" aria-labelledby="detailOffcanvasLabel" data-bs-backdrop="false" data-bs-scroll="true">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="detailOffcanvasLabel">Item Details</h5>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped" id="tasksTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 30%;">Title</th>
-                                <th style="width: 20%;">Project</th>
-                                <th style="width: 15%;">Start Date</th>
-                                <th style="width: 15%;">Due Date</th>
-                                <th style="width: 10%;">Priority</th>
-                                <th style="width: 10%;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Tasks will be rendered here by JS -->
-                        </tbody>
-                    </table>
-                </div>
-                <p id="noTasksMessage" class="text-center text-muted mt-5" style="display:none;">No tasks yet. Add tasks from Project detail view.</p>
-            </div>
+                <div class="offcanvas-body">
+                    <div class="offcanvas-resize-handle"></div> <!-- Draggable resize handle -->
+                    <form id="detailForm">
+                        <input type="hidden" id="detailItemId">
+                        <input type="hidden" id="detailItemType"> <!-- 'project' or 'task' -->
+                        <input type="hidden" id="detailItemParentId">
 
-            <!-- Calendar Tab Content -->
-            <div class="tab-pane fade" id="calendar-content" role="tabpanel" aria-labelledby="calendar-tab">
-                <div class="calendar-nav">
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-secondary" id="prevMonthBtn"><i class="bi bi-chevron-left"></i></button>
-                        <button class="btn btn-outline-secondary" id="nextMonthBtn"><i class="bi bi-chevron-right"></i></button>
-                        <button class="btn btn-primary" id="todayBtn">Today</button>
-                    </div>
-                    <h4 id="currentMonthYear" class="mb-0 text-center flex-grow-1">Month Year</h4>
-                    <div class="d-flex gap-2">
-                        <select class="form-select w-auto" id="yearSelect"></select>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="calendarViewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                View: Time Span
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="calendarViewDropdown">
-                                <li><a class="dropdown-item" href="#" data-view="timespan">Time Span</a></li>
-                                <!-- Removed: <li><a class="dropdown-item" href="#" data-view="startdate">Only Start Date</a></li> -->
-                                <li><a class="dropdown-item" href="#" data-view="duedate">Only Due Date</a></li>
-                            </ul>
+                        <div class="mb-3">
+                            <label for="detailTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="detailTitle" required>
                         </div>
-                    </div>
-                </div>
-                <div class="calendar-grid" id="calendarGrid">
-                    <!-- Day headers -->
-                    <div class="calendar-day-header">Sun</div>
-                    <div class="calendar-day-header">Mon</div>
-                    <div class="calendar-day-header">Tue</div>
-                    <div class="calendar-day-header">Wed</div>
-                    <div class="calendar-day-header">Thu</div>
-                    <div class="calendar-day-header">Fri</div>
-                    <div class="calendar-day-header">Sat</div>
-                    <!-- Calendar days will be rendered here by JS -->
+
+                        <!-- New: Project dropdown for tasks -->
+                        <div class="mb-3" id="detailTaskProjectField" style="display: none;">
+                            <label for="detailTaskProjectSelect" class="form-label">Project</label>
+                            <select class="form-select" id="detailTaskProjectSelect">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dates</label>
+                            <div class="input-group date-inputs">
+                                <input type="date" class="form-control" id="detailStartDate" title="Start Date">
+                                <span class="input-group-text">-</span>
+                                <input type="date" class="form-control" id="detailDueDate" title="Due Date">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label for="detailPriority" class="form-label">Priority</label>
+                                <select class="form-select" id="detailPriority">
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label for="detailStatus" class="form-label">Status</label>
+                                <select class="form-select" id="detailStatus">
+                                    <option value="To Do">To Do</option>
+                                    <option value="Do Now">Do Now</option>
+                                    <option value="Complete">Complete</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="detailDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="detailDescription" rows="5"></textarea>
+                        </div>
+
+                        <!-- New: Nested Task List for Projects -->
+                        <div id="projectTasksListContainer" class="project-tasks-list-container" style="display: none;">
+                            <div class="project-tasks-list-header">
+                                <h6 class="mb-0">Tasks in this Project</h6>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="hideCompletedProjectTasksSwitch">
+                                    <label class="form-check-label" for="hideCompletedProjectTasksSwitch">Hide Completed</label>
+                                </div>
+                            </div>
+                            <ul class="project-tasks-list" id="projectTasksList">
+                                <!-- Project's tasks will be rendered here by JS -->
+                            </ul>
+                            <p id="noProjectTasksMessage" class="text-center text-muted py-2" style="display: none;">No tasks in this project yet. Use "Add Task" below.</p>
+                        </div>
+
+                        <div class="detail-buttons mt-auto">
+                            <!-- Save button removed for auto-save -->
+                            <button type="button" class="btn btn-outline-primary" id="addNestedTaskBtn" style="display:none;">
+                                <i class="bi bi-plus-lg"></i> Add Task
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" id="deleteItemBtn">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sideview (Offcanvas) for Task/Project Details -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="detailOffcanvas" aria-labelledby="detailOffcanvasLabel" data-bs-backdrop="false" data-bs-scroll="true">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="detailOffcanvasLabel">Item Details</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div class="offcanvas-resize-handle"></div> <!-- Draggable resize handle -->
-            <form id="detailForm">
-                <input type="hidden" id="detailItemId">
-                <input type="hidden" id="detailItemType"> <!-- 'project' or 'task' -->
-                <input type="hidden" id="detailItemParentId">
-
-                <div class="mb-3">
-                    <label for="detailTitle" class="form-label">Title</label>
-                    <input type="text" class="form-control" id="detailTitle" required>
-                </div>
-
-                <!-- New: Project dropdown for tasks -->
-                <div class="mb-3" id="detailTaskProjectField" style="display: none;">
-                    <label for="detailTaskProjectSelect" class="form-label">Project</label>
-                    <select class="form-select" id="detailTaskProjectSelect">
-                        <!-- Options populated by JS -->
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Dates</label>
-                    <div class="input-group date-inputs">
-                        <input type="date" class="form-control" id="detailStartDate" title="Start Date">
-                        <span class="input-group-text">-</span>
-                        <input type="date" class="form-control" id="detailDueDate" title="Due Date">
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <label for="detailPriority" class="form-label">Priority</label>
-                        <select class="form-select" id="detailPriority">
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                        </select>
-                    </div>
-                    <div class="col-6">
-                        <label for="detailStatus" class="form-label">Status</label>
-                        <select class="form-select" id="detailStatus">
-                            <option value="To Do">To Do</option>
-                            <option value="Do Now">Do Now</option>
-                            <option value="Complete">Complete</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="detailDescription" class="form-label">Description</label>
-                    <textarea class="form-control" id="detailDescription" rows="5"></textarea>
-                </div>
-
-                <!-- New: Nested Task List for Projects -->
-                <div id="projectTasksListContainer" class="project-tasks-list-container" style="display: none;">
-                    <div class="project-tasks-list-header">
-                        <h6 class="mb-0">Tasks in this Project</h6>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="hideCompletedProjectTasksSwitch">
-                            <label class="form-check-label" for="hideCompletedProjectTasksSwitch">Hide Completed</label>
-                        </div>
-                    </div>
-                    <ul class="project-tasks-list" id="projectTasksList">
-                        <!-- Project's tasks will be rendered here by JS -->
-                    </ul>
-                    <p id="noProjectTasksMessage" class="text-center text-muted py-2" style="display: none;">No tasks in this project yet. Use "Add Task" below.</p>
-                </div>
-
-                <div class="detail-buttons mt-auto">
-                    <!-- Save button removed for auto-save -->
-                    <button type="button" class="btn btn-outline-primary" id="addNestedTaskBtn" style="display:none;">
-                        <i class="bi bi-plus-lg"></i> Add Task
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" id="deleteItemBtn">
-                        <i class="bi bi-trash"></i> Delete
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
