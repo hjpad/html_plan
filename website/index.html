@@ -19,6 +19,30 @@
             transition: background-color 0.3s, color 0.3s; /* Smooth transition for dark/light mode */
         }
 
+        /* Login Container Styles */
+        #login-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bs-secondary-bg);
+        }
+        #login-box {
+            background-color: var(--bs-body-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        #login-box .app-name-login {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--bs-primary);
+            margin-bottom: 30px;
+        }
+
         /* Main app container */
         #app-container {
             flex-grow: 1;
@@ -236,7 +260,26 @@
 </head>
 <body>
 
-    <div id="app-container" class="d-flex flex-column">
+    <!-- Login Form Container -->
+    <div id="login-container">
+        <div id="login-box">
+            <h1 class="app-name-login">html_plan</h1>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <input type="email" class="form-control" id="loginEmail" placeholder="Email address" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-2">Login</button>
+                <button type="button" class="btn btn-outline-secondary w-100" id="registerBtn">Register (First-time user)</button>
+                <div id="loginMessage" class="mt-3 text-danger"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container (Hidden by default, shown after login) -->
+    <div id="app-container" style="display: none;">
         <header>
             <div id="app-name">html_plan</div>
             <div id="search-field" class="input-group">
@@ -256,6 +299,8 @@
                                 <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
                             </div>
                         </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item" id="logoutBtn">Logout</button></li>
                     </ul>
                 </div>
             </div>
@@ -446,13 +491,140 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eJ7y57+opsmga6" crossorigin="anonymous"></script> -->
-	<script src="scripts/bootstrap.bundle.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <!-- Your Firebase Config -->
+    <script src="scripts/firebaseConfig.js"></script>
+    <!-- Local Bootstrap JS -->
+    <script src="scripts/bootstrap.bundle.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Data Storage and Initialization ---
+            // --- Firebase Initialization and Auth State Management ---
+            // Ensure firebaseConfig is loaded from the separate file
+            if (typeof firebaseConfig === 'undefined') {
+                console.error("ERROR: firebaseConfig.js not loaded or defined. Please check the file path and content.");
+                return; // Stop execution if Firebase config is missing
+            }
+
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+
+            const loginContainer = document.getElementById('login-container');
+            const appContainer = document.getElementById('app-container');
+            const loginForm = document.getElementById('loginForm');
+            const loginEmailInput = document.getElementById('loginEmail');
+            const loginPasswordInput = document.getElementById('loginPassword');
+            const loginMessage = document.getElementById('loginMessage');
+            const registerBtn = document.getElementById('registerBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+
+            // Listen for authentication state changes
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // User is signed in
+                    console.log("User logged in:", user.email);
+                    loginContainer.style.display = 'none';
+                    appContainer.style.display = 'flex'; // Show main app
+                    // Load user-specific data (not implemented yet, but where you'd do it)
+                    // For now, clear local storage and reset to ensure clean start per user,
+                    // in a real app you'd fetch user-specific data.
+                    localStorage.removeItem('items');
+                    items = []; // Clear current items in memory
+                    refreshAllTabs(); // Render empty or fetched data
+                } else {
+                    // User is signed out
+                    console.log("User logged out.");
+                    loginContainer.style.display = 'flex';
+                    appContainer.style.display = 'none'; // Hide main app
+                    loginForm.reset(); // Clear login form fields
+                    loginMessage.textContent = '';
+                    // Clear local storage and reset app state when logged out
+                    localStorage.removeItem('items');
+                    items = [];
+                    refreshAllTabs(); // Re-render to show empty state
+                }
+            });
+
+            // Login Form Submission
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = loginEmailInput.value;
+                const password = loginPasswordInput.value;
+                loginMessage.textContent = ''; // Clear previous messages
+
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    // auth.onAuthStateChanged will handle UI update
+                } catch (error) {
+                    let errorMessage = 'Login failed. Please check your credentials.';
+                    if (error.code === 'auth/user-not-found') {
+                        errorMessage = 'No user found with this email.';
+                    } else if (error.code === 'auth/wrong-password') {
+                        errorMessage = 'Incorrect password.';
+                    } else if (error.code === 'auth/invalid-email') {
+                         errorMessage = 'Invalid email address format.';
+                    }
+                    console.error("Login error:", error.message);
+                    loginMessage.textContent = errorMessage;
+                }
+            });
+
+            // Register Button Click (for first-time users)
+            registerBtn.addEventListener('click', async () => {
+                const email = loginEmailInput.value;
+                const password = loginPasswordInput.value;
+                loginMessage.textContent = '';
+
+                if (!email || !password) {
+                    loginMessage.textContent = 'Please enter both email and password to register.';
+                    return;
+                }
+                if (password.length < 6) {
+                    loginMessage.textContent = 'Password must be at least 6 characters long.';
+                    return;
+                }
+
+                try {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    loginMessage.textContent = 'Registration successful! You are now logged in.';
+                    loginMessage.classList.remove('text-danger');
+                    loginMessage.classList.add('text-success');
+                    // auth.onAuthStateChanged will handle UI update
+                } catch (error) {
+                    let errorMessage = 'Registration failed.';
+                     if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = 'This email is already registered. Try logging in or use a different email.';
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = 'Password is too weak (min 6 characters).';
+                    } else if (error.code === 'auth/invalid-email') {
+                         errorMessage = 'Invalid email address format.';
+                    }
+                    console.error("Registration error:", error.message);
+                    loginMessage.textContent = errorMessage;
+                    loginMessage.classList.remove('text-success');
+                    loginMessage.classList.add('text-danger');
+                }
+            });
+
+            // Logout Button
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await auth.signOut();
+                    // auth.onAuthStateChanged will handle UI update
+                } catch (error) {
+                    console.error("Logout error:", error.message);
+                    alert("Failed to logout: " + error.message);
+                }
+            });
+
+
+            // --- Data Storage and Initialization (now user-specific, but using localStorage for simplicity) ---
+            // In a real Firebase app, 'items' would be stored in Firestore/Realtime Database
+            // associated with the logged-in user's UID. For this example, we'll keep it in
+            // localStorage, but clear it on login/logout to simulate user-specific data.
             let items = JSON.parse(localStorage.getItem('items')) || [];
             let currentProjectsSort = 'name';
             let hideCompletedProjects = false;
@@ -470,6 +642,7 @@
             }
 
             function saveItems() {
+                // In a real app, this would be `db.collection('users').doc(auth.currentUser.uid).set(items)`
                 localStorage.setItem('items', JSON.stringify(items));
             }
 
@@ -1001,23 +1174,9 @@
             });
 
 
-            // --- Initial Render and Tab Activation ---
-            // Render content for the initially active tab (Projects)
-            refreshAllTabs();
-
-            // Set up event listeners for tab changes to re-render relevant content
-            const mainTabs = document.getElementById('mainTabs');
-            mainTabs.addEventListener('shown.bs.tab', function (event) {
-                const activeTabId = event.target.id;
-                if (activeTabId === 'projects-tab') {
-                    renderProjectsTab();
-                } else if (activeTabId === 'tasks-tab') {
-                    renderTasksTab();
-                } else if (activeTabId === 'calendar-tab') {
-                    renderCalendarTab();
-                }
-            });
-
+            // --- Initial Render (handled by auth.onAuthStateChanged) ---
+            // The initial state will be determined by Firebase, which will then call refreshAllTabs()
+            // if a user is logged in.
         });
     </script>
 
