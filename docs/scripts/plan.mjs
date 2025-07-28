@@ -238,11 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
             statusSelect.className = `form-select form-select-sm status-select ${getStatusClass(item.status)}`;
         }
 
-        // Update the detail view if it's open for this item
-        if (detailItemIdInput.value === item.id) {
-            populateDetailForm(item);
-        }
-
         // If it's a project, update its tasks in the projects view
         if (!item.parentId) {
             updateProjectTasksInUI(item.id);

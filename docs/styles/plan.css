@@ -16,6 +16,7 @@
 /* Tables (Projects & Tasks tabs) */
 .table-striped > tbody > tr:nth-of-type(odd) > * {
     background-color: var(--bs-table-striped-bg);
+    /* background-color: var(--bs-tertiary-bg); */
 }
 .table thead th {
     border-bottom: 2px solid var(--bs-border-color-translucent);
@@ -43,13 +44,15 @@
 
 /* Specific sticky column backgrounds to ensure striping works */
 .table-responsive tbody tr:nth-of-type(odd) td.sticky-column {
-    background-color: var(--bs-table-striped-bg);
+    /* background-color: var(--bs-table-striped-bg); */
+    background-color: var(--bs-tertiary-bg);
 }
 .table-responsive tbody tr:nth-of-type(even) td.sticky-column {
     background-color: var(--bs-table-bg);
 }
 .table-responsive thead th.sticky-column {
-    background-color: var(--bs-tertiary-bg); /* Header background */
+    /* background-color: var(--bs-tertiary-bg);  */
+    /* Header background */
     box-shadow: 1px 0 2px rgba(0,0,0,0.1); /* Subtle shadow for separation */
 }
 
@@ -83,7 +86,7 @@
 
 
 .project-row {
-    font-weight: bold;
+    /* font-weight: bold; */
     cursor: pointer;
     background-color: var(--bs-secondary-bg); /* Slightly darker for project rows */
 }
@@ -473,4 +476,55 @@ header {
     #user-controls { order: 2; width: auto; margin-left: auto; } /* Push user icon to right */
     #search-field { order: 3; width: 100%; margin-top: 10px; } /* Search on a new line, full width */
     #search-field .form-control { max-width: 100%; }
+}
+
+
+/* Add these styles */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    min-width: 800px; /* Ensures table doesn't shrink too much on small screens */
+}
+
+.sticky-column {
+    position: sticky;
+    left: 0;
+    background-color: inherit;
+    z-index: 2;
+}
+
+.table-cell-title {
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+/* Media query for mobile devices */
+@media (max-width: 767px) {
+    .table-cell-title {
+        max-width: 50vw; /* 50% of viewport width for mobile */
+    }
+}
+
+/* Adjust other column widths */
+.table th, .table td {
+    width: 15%;
+}
+
+.table th:first-child, .table td:first-child {
+    width: 40%; /* Wider for title column */
+}
+
+.table th:nth-child(2), .table td:nth-child(2),
+.table th:nth-child(3), .table td:nth-child(3) {
+    width: 15%; /* For date columns */
+}
+
+.table th:nth-child(4), .table td:nth-child(4),
+.table th:nth-child(5), .table td:nth-child(5) {
+    width: 15%; /* For priority and status columns */
 }
