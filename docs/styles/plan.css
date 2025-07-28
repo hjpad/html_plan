@@ -24,7 +24,7 @@
 .table td, .table th {
     vertical-align: middle;
     padding: 0.3rem 0.75rem; /* Significantly reduced vertical padding for rows */
-    height: 35px; /* Minimum height for table rows */
+    height: 0px; /* Minimum height for table rows */
 }
 .table-responsive {
     margin-top: 15px;
@@ -51,6 +51,24 @@
 .table-responsive thead th.sticky-column {
     background-color: var(--bs-tertiary-bg); /* Header background */
     box-shadow: 1px 0 2px rgba(0,0,0,0.1); /* Subtle shadow for separation */
+}
+
+.sticky-column .d-flex {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.sticky-column .collapse-toggle {
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+}
+
+.sticky-column .table-cell-title {
+    flex-grow: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
@@ -173,6 +191,15 @@
 .offcanvas-end.show {
     transform: translateX(0%);
 }
+.offcanvas-end:not(.show) {
+        /* When hidden, collapse width to 0 so main content can expand. */
+        /* !important is needed to override the inline style set by the resizing script. */
+        width: 0 !important;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        /* overflow: hidden; */
+    }
 
 @media (max-width: 767.98px) { /* Mobile breakpoint for small screens (Bootstrap 'md' is 768px) */
     .offcanvas-end {
@@ -209,6 +236,8 @@
 .offcanvas-body {
     display: flex;
     flex-direction: column;
+    flex-grow: 1; /* Allow the body to take up all available vertical space */
+    overflow-y: auto; /* Add a scrollbar only when content overflows */
 }
 .detail-buttons {
     margin-top: auto; /* Push buttons to the bottom */
@@ -216,6 +245,7 @@
     padding-top: 15px;
     display: flex;
     gap: 10px;
+    flex-shrink: 0; /* Prevent button area from shrinking */
 }
 .date-inputs input {
     flex-grow: 1;
@@ -420,7 +450,7 @@ header {
     flex-wrap: nowrap; /* Prevent wrapping by default */
     gap: 10px; /* Space between items */
     flex-shrink: 0; /* Prevent header from shrinking */
-    z-index: 1000; /* Ensure it stays on top of content below */
+    z-index: 1050; /* Ensure it stays on top of content below */
     width: 100%; /* Full width */
 }
 
@@ -437,6 +467,7 @@ header {
         flex-wrap: wrap; /* Allow items to wrap */
         justify-content: center; /* Center items if they wrap */
         padding: 10px; /* Smaller padding */
+        z-index: 1000; /* Ensure it stays on top of content below */
     }
     #app-name { order: 1; display: none !important; } /* Hide app name explicitly on mobile */
     #user-controls { order: 2; width: auto; margin-left: auto; } /* Push user icon to right */

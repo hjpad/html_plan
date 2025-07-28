@@ -283,8 +283,12 @@ document.addEventListener('DOMContentLoaded', () => {
             projectRow.dataset.itemId = project.id;
             projectRow.dataset.itemType = 'project';
             projectRow.innerHTML = `
-                <td class="sticky-column"><span class="collapse-toggle" data-bs-toggle="collapse" data-bs-target="#project-${project.id}-tasks" aria-expanded="true" aria-controls="project-${project.id}-tasks"><i class="bi bi-chevron-down"></i></span></td>
-                <td><span class="table-cell-title">${project.title}</span></td>
+                <td class="sticky-column">
+                    <div class="d-flex align-items-center">
+                        <span class="collapse-toggle me-2" data-bs-toggle="collapse" data-bs-target="#project-${project.id}-tasks" aria-expanded="false" aria-controls="project-${project.id}-tasks"><i class="bi bi-chevron-right"></i></span>
+                        <span class="table-cell-title">${project.title}</span>
+                    </div>
+                </td>
                 <td><input type="date" class="form-control form-control-sm table-date-input" value="${project.startDate || ''}" data-item-id="${project.id}" data-field="startDate"></td>
                 <td><input type="date" class="form-control form-control-sm table-date-input" value="${project.dueDate || ''}" data-item-id="${project.id}" data-field="dueDate"></td>
                 <td>
@@ -319,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tasksRow = projectsTableBody.insertRow();
             tasksRow.innerHTML = `<td colspan="6" class="p-0">
-                <div class="collapse show" id="project-${project.id}-tasks">
+                <div class="collapse" id="project-${project.id}-tasks">
                     <table class="table table-sm mb-0">
                         <tbody></tbody>
                     </table>
@@ -339,8 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     taskRow.dataset.itemId = task.id;
                     taskRow.dataset.itemType = 'task';
                     taskRow.innerHTML = `
-                        <td></td>
-                        <td><span class="table-cell-title">${task.title}</span></td>
+                        <td class="sticky-column"><span class="table-cell-title">${task.title}</span></td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.startDate || ''}" data-item-id="${task.id}" data-field="startDate"></td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.dueDate || ''}" data-item-id="${task.id}" data-field="dueDate"></td>
                         <td>

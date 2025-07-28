@@ -7,6 +7,7 @@ body {
     display: flex;
     flex-direction: column;
     transition: background-color 0.3s, color 0.3s; /* Smooth transition for dark/light mode */
+    /* overflow: hidden; Prevent the body itself from showing scrollbars */
 }
 
 /* Main app container */
