@@ -11,6 +11,7 @@ import { saveItemToFirestore, deleteItemFromFirestore, loadItemsFromFirestore } 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Global Application State ---
     let items = []; // Will be populated from Firestore after login
+    let expandedProjects = new Set(); // Variable to keep track of expanded projects
     let currentProjectsSort = 'name';
     let hideCompletedProjects = false;
     let hideCompletedTasks = true; // Set to true by default for Tasks tab
@@ -216,7 +217,55 @@ document.addEventListener('DOMContentLoaded', () => {
             items[itemIndex] = { ...items[itemIndex], ...newValues };
             await saveItemToFirestore(auth.currentUser.uid, items[itemIndex]);
             console.log(`Item "${items[itemIndex].title}" updated.`);
-            refreshAllTabs(); // Always refresh to ensure consistency across all views
+            updateUIForItem(items[itemIndex]);
+        }
+    }
+
+    function updateUIForItem(item) {
+        const itemRow = document.querySelector(`[data-item-id="${item.id}"]`);
+        if (itemRow) {
+            // Update the row content
+            itemRow.querySelector('.table-cell-title').textContent = item.title;
+            itemRow.querySelector('input[data-field="startDate"]').value = item.startDate || '';
+            itemRow.querySelector('input[data-field="dueDate"]').value = item.dueDate || '';
+            
+            const prioritySelect = itemRow.querySelector('.priority-select');
+            prioritySelect.value = item.priority;
+            prioritySelect.className = `form-select form-select-sm priority-select ${getPriorityClass(item.priority)}`;
+            
+            const statusSelect = itemRow.querySelector('.status-select');
+            statusSelect.value = item.status;
+            statusSelect.className = `form-select form-select-sm status-select ${getStatusClass(item.status)}`;
+        }
+
+        // Update the detail view if it's open for this item
+        if (detailItemIdInput.value === item.id) {
+            populateDetailForm(item);
+        }
+
+        // If it's a project, update its tasks in the projects view
+        if (!item.parentId) {
+            updateProjectTasksInUI(item.id);
+        }
+
+        // Refresh the tasks tab and calendar tab as they might need reorganizing
+        renderTasksTab();
+        renderCalendarTab();
+    }
+
+    function updateProjectTasksInUI(projectId) {
+        const projectTasksContainer = document.querySelector(`#project-${projectId}-tasks tbody`);
+        if (projectTasksContainer) {
+            const projectTasks = items.filter(item => item.parentId === projectId);
+            projectTasksContainer.innerHTML = ''; // Clear existing tasks
+            if (projectTasks.length === 0) {
+                projectTasksContainer.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-2">No tasks for this project yet.</td></tr>`;
+            } else {
+                projectTasks.forEach(task => {
+                    // Render each task row (similar to how it's done in renderProjectsTab)
+                    // ... (task row rendering code here)
+                });
+            }
         }
     }
 
@@ -279,6 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         projects.forEach(project => {
             const projectRow = projectsTableBody.insertRow();
+            const isExpanded = expandedProjects.has(project.id);
+
             projectRow.className = 'project-row';
             projectRow.dataset.itemId = project.id;
             projectRow.dataset.itemType = 'project';
@@ -323,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tasksRow = projectsTableBody.insertRow();
             tasksRow.innerHTML = `<td colspan="6" class="p-0">
-                <div class="collapse" id="project-${project.id}-tasks">
+                <div class="collapse ${isExpanded ? 'show' : ''}" id="project-${project.id}-tasks">
                     <table class="table table-sm mb-0">
                         <tbody></tbody>
                     </table>
@@ -377,6 +428,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
             }
+            projectRow.querySelector('.collapse-toggle').addEventListener('click', (e) => {
+                const projectId = project.id;
+                if (expandedProjects.has(projectId)) {
+                    expandedProjects.delete(projectId);
+                } else {
+                    expandedProjects.add(projectId);
+                }
+                e.stopPropagation(); // Prevent opening detail view when toggling
+            });
         });
 
         projectsTableBody.querySelectorAll('.collapse-toggle').forEach(toggle => {
@@ -393,6 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon.classList.add('bi-chevron-right');
             });
         });
+        
     }
 
     function renderTasksTab() {
