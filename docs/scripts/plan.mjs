@@ -246,6 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Refresh the tasks tab and calendar tab as they might need reorganizing
         renderTasksTab();
         renderCalendarTab();
+
+        refreshAllTabs();
     }
 
     function updateProjectTasksInUI(projectId) {
@@ -517,7 +519,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     taskRow.innerHTML = `
                         <td class="sticky-column"><span class="table-cell-title">${task.title}</span></td>
-                        <td class="sticky-column-2"><span class="table-cell-title">${parentTitle}</span></td>
+                        <td class="sticky-column-2">
+                            <span class="table-cell-title project-link" data-project-id="${task.parentId}">${parentTitle}</span>
+                        </td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.startDate || ''}" data-item-id="${task.id}" data-field="startDate"></td>
                         <td><input type="date" class="form-control form-control-sm table-date-input" value="${task.dueDate || ''}" data-item-id="${task.id}" data-field="dueDate"></td>
                         <td>
@@ -549,6 +553,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             cell.addEventListener('click', () => openDetailSideview(task.id));
                         }
                     });
+                    // Event for project link
+                    const projectLink = taskRow.querySelector('.project-link');
+                    if (projectLink) {
+                        projectLink.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Prevent opening task detail
+                            openDetailSideview(task.parentId);
+                        });
+                    }
                 });
             }
         });
@@ -739,6 +751,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Set current value
             detailTaskProjectSelect.value = item.parentId || '';
+
+            // const parentProject = items.find(p => p.id === item.parentId);
+            // if (parentProject) {
+            //     detailTaskProjectSelect.innerHTML = `
+            //         <option value="${parentProject.id}" selected>
+            //             ${parentProject.title} 
+            //             <i class="bi bi-box-arrow-up-right project-link-icon" data-project-id="${parentProject.id}"></i>
+            //         </option>
+            //     `;
+            //     // Add click event for the project link icon
+            //     const projectLinkIcon = detailTaskProjectSelect.querySelector('.project-link-icon');
+            //     if (projectLinkIcon) {
+            //         projectLinkIcon.addEventListener('click', (e) => {
+            //             e.stopPropagation(); // Prevent changing the select value
+            //             openDetailSideview(parentProject.id);
+            //         });
+            //     }
+            // }
 
         } else { // It's a Project
             document.getElementById('detailOffcanvasLabel').textContent = 'Project Details';

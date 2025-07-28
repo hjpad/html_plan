@@ -95,6 +95,7 @@
 }
 .task-row {
     font-size: 0.9em;
+    cursor: pointer;
 }
 .collapse-toggle {
     cursor: pointer;
@@ -256,7 +257,7 @@
 
 /* Priority & Status selects in Detail View (applying color directly) */
 #detailPriority, #detailStatus, #detailTaskProjectSelect {
-    font-weight: bold;
+    /* font-weight: bold; */
     padding: 5px 10px;
     border-radius: 5px;
     height: auto; /* Adjust height for styling */
@@ -527,4 +528,34 @@ header {
 .table th:nth-child(4), .table td:nth-child(4),
 .table th:nth-child(5), .table td:nth-child(5) {
     width: 15%; /* For priority and status columns */
+}
+
+
+.project-link {
+    cursor: pointer;
+    color: var(--bs-primary);
+    text-decoration: underline;
+}
+
+.project-link:hover {
+    text-decoration: none;
+}
+
+.project-link-icon {
+    cursor: pointer;
+    margin-left: 5px;
+    font-size: 0.8em;
+}
+
+.project-link-icon:hover {
+    color: var(--bs-primary);
+}
+
+#detailTaskProjectField {
+    display: flex;
+    align-items: center;
+}
+
+#detailTaskProjectSelect {
+    flex-grow: 1;
 }
