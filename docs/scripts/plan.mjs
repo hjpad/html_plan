@@ -732,6 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Logic for Task vs Project specific fields in detail view
         if (item.parentId) { // It's a Task
             document.getElementById('detailOffcanvasLabel').textContent = 'Task Details';
+            detailOffcanvasElement.classList.remove('project-detail')
             detailTaskProjectField.style.display = 'block'; // Show project dropdown for tasks
             projectTasksListContainer.style.display = 'none'; // Hide project task list
             addNestedTaskBtn.style.display = 'none';
@@ -772,6 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else { // It's a Project
             document.getElementById('detailOffcanvasLabel').textContent = 'Project Details';
+            detailOffcanvasElement.classList.add('project-detail');
             detailTaskProjectField.style.display = 'none'; // Hide project dropdown for projects
             projectTasksListContainer.style.display = 'block'; // Show project task list
             addNestedTaskBtn.style.display = 'inline-block'; // Show "Add Task" for projects

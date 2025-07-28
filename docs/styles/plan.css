@@ -551,11 +551,29 @@ header {
     color: var(--bs-primary);
 }
 
-#detailTaskProjectField {
-    display: flex;
-    align-items: center;
+/* Project Detail View Styling */
+.offcanvas-end.project-detail {
+    background-color: var(--bs-tertiary-bg);
 }
 
-#detailTaskProjectSelect {
-    flex-grow: 1;
+/* Ensure form elements within project detail view have appropriate background */
+.offcanvas-end.project-detail .offcanvas-body {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.offcanvas-end.project-detail input,
+.offcanvas-end.project-detail select,
+.offcanvas-end.project-detail textarea {
+    background-color: var(--bs-body-bg);
+}
+
+/* Adjust for dark mode if necessary */
+[data-bs-theme="dark"] .offcanvas-end.project-detail {
+    background-color: var(--bs-dark-bg-subtle);
+}
+
+[data-bs-theme="dark"] .offcanvas-end.project-detail input,
+[data-bs-theme="dark"] .offcanvas-end.project-detail select,
+[data-bs-theme="dark"] .offcanvas-end.project-detail textarea {
+    background-color: var(--bs-secondary-bg);
 }
