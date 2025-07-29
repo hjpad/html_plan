@@ -50,6 +50,10 @@
     <div id="main-app-wrapper" style="display: none;" class="d-flex flex-column flex-grow-1">
         <header class="d-flex align-items-center p-2 p-md-3">
             <div id="app-name" class="order-1 d-none d-md-block">html_plan</div>
+            <!-- Added element for current workspace name -->
+            <div id="currentWorkspaceContainer" class="order-1 ms-2">
+                <span id="currentWorkspaceName" class="badge bg-secondary fs-6"></span>
+            </div>
             <div id="search-field" class="input-group order-2 flex-grow-1 mx-md-3">
                 <input type="text" class="form-control" placeholder="Search projects or tasks..." id="globalSearchInput">
                 <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn"><i class="bi bi-x-lg"></i></button>
@@ -59,16 +63,28 @@
                     <button class="btn btn-light" type="button" id="userIconDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person-circle fs-4"></i>
                     </button>
+                    <!-- Restructured Dropdown Menu -->
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userIconDropdown">
+                        <li>
+                            <div class="dropdown-header d-flex justify-content-between align-items-center">
+                                <span>Workspaces</span>
+                                <button class="btn btn-sm btn-icon" id="createWorkspaceBtn" data-bs-toggle="tooltip" data-bs-placement="left" title="Create Workspace">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </li>
+                        <!-- Container for dynamically generated workspace list -->
+                        <div id="workspacesListContainer"></div>
+                        <li><hr class="dropdown-divider"></li>
                         <li><h6 class="dropdown-header">Settings</h6></li>
                         <li>
                             <div class="form-check form-switch dropdown-item px-4">
-                                <input class="form-check-input" type="checkbox" id="darkModeSwitch">
                                 <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
+                                <input class="form-check-input" type="checkbox" id="darkModeSwitch">
                             </div>
                         </li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><button class="dropdown-item" id="logoutBtn">Logout</button></li>
+                        <li><button class="dropdown-item" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</button></li>
                     </ul>
                 </div>
             </div>
@@ -229,7 +245,15 @@
                             <input type="text" class="form-control" id="detailTitle" required>
                         </div>
 
-                        <!-- New: Project dropdown for tasks -->
+                        <!-- New: Workspace dropdown for projects -->
+                        <div class="mb-3" id="detailProjectWorkspaceField" style="display: none;">
+                            <label for="detailProjectWorkspaceSelect" class="form-label">Workspace</label>
+                            <select class="form-select" id="detailProjectWorkspaceSelect">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+
+                        <!-- Project dropdown for tasks -->
                         <div class="mb-3" id="detailTaskProjectField" style="display: none;">
                             <label for="detailTaskProjectSelect" class="form-label">Project</label>
                             <select class="form-select" id="detailTaskProjectSelect">
@@ -271,7 +295,7 @@
                             <textarea class="form-control" id="detailDescription" rows="5"></textarea>
                         </div>
 
-                        <!-- New: Nested Task List for Projects -->
+                        <!-- Nested Task List for Projects -->
                         <div id="projectTasksListContainer" class="project-tasks-list-container" style="display: none;">
                             <div class="project-tasks-list-header">
                                 <h6 class="mb-0">Tasks in this Project</h6>

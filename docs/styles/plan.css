@@ -4,33 +4,31 @@
 .nav-tabs {
     border-bottom: 1px solid var(--bs-border-color-translucent);
     background-color: var(--bs-tertiary-bg);
-    padding-left: 10px; /* Align with app content */
+    padding-left: 10px;
     padding-right: 10px;
 }
 .tab-content {
-    padding: 15px; /* Slightly reduced padding */
-    flex-grow: 1; /* Make tab content fill available space */
-    overflow-y: auto; /* Enable scrolling for tab content */
+    padding: 15px;
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 /* Tables (Projects & Tasks tabs) */
 .table-striped > tbody > tr:nth-of-type(odd) > * {
     background-color: var(--bs-table-striped-bg);
-    /* background-color: var(--bs-tertiary-bg); */
 }
 .table thead th {
     border-bottom: 2px solid var(--bs-border-color-translucent);
-    padding: 0.5rem 0.75rem; /* Reduced vertical padding */
+    padding: 0.5rem 0.75rem;
 }
 .table td, .table th {
     vertical-align: middle;
-    padding: 0.3rem 0.75rem; /* Significantly reduced vertical padding for rows */
-    height: 0px; /* Minimum height for table rows */
+    padding: 0.3rem 0.75rem;
 }
 .table-responsive {
     margin-top: 15px;
-    overflow-x: auto; /* Enable horizontal scrolling */
-    position: relative; /* Needed for sticky to work with table */
+    overflow-x: auto;
+    position: relative;
 }
 
 /* Sticky column styles */
@@ -38,34 +36,26 @@
 .table-responsive td.sticky-column {
     position: sticky;
     left: 0;
-    z-index: 2; /* Higher than other table cells */
-    background-color: inherit; /* Inherit row background for striping */
+    z-index: 2;
+    background-color: inherit;
 }
-
-/* Specific sticky column backgrounds to ensure striping works */
 .table-responsive tbody tr:nth-of-type(odd) td.sticky-column {
-    /* background-color: var(--bs-table-striped-bg); */
     background-color: var(--bs-tertiary-bg);
 }
 .table-responsive tbody tr:nth-of-type(even) td.sticky-column {
     background-color: var(--bs-table-bg);
 }
 .table-responsive thead th.sticky-column {
-    /* background-color: var(--bs-tertiary-bg);  */
-    /* Header background */
-    box-shadow: 1px 0 2px rgba(0,0,0,0.1); /* Subtle shadow for separation */
+    box-shadow: 1px 0 2px rgba(0,0,0,0.1);
 }
-
 .sticky-column .d-flex {
     display: flex !important;
     align-items: center !important;
 }
-
 .sticky-column .collapse-toggle {
     flex-shrink: 0;
     margin-right: 0.5rem;
 }
-
 .sticky-column .table-cell-title {
     flex-grow: 1;
     min-width: 0;
@@ -73,25 +63,19 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-
-/* Table cell title to be single line */
 .table-cell-title {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: block; /* Important for ellipsis */
-    width: 100%; /* Take full width of cell */
+    display: block;
+    width: 100%;
 }
-
-
 .project-row {
-    /* font-weight: bold; */
     cursor: pointer;
-    background-color: var(--bs-secondary-bg); /* Slightly darker for project rows */
+    background-color: var(--bs-secondary-bg);
 }
 .project-row:hover {
-    background-color: var(--bs-gray-300); /* Hover effect for project rows */
+    background-color: var(--bs-gray-300);
 }
 .task-row {
     font-size: 0.9em;
@@ -100,7 +84,7 @@
 .collapse-toggle {
     cursor: pointer;
     margin-right: 5px;
-    width: 1em; /* Fixed width for icon */
+    width: 1em;
     display: inline-block;
     text-align: center;
 }
@@ -111,469 +95,620 @@
     padding: 3px 6px;
     border-radius: 3px;
     font-weight: bold;
-    height: auto; /* Allow select to size to content */
-    min-width: 70px; /* Give a minimum width for readability */
-    appearance: none; /* Remove default arrow for custom look */
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e"); /* Custom arrow for select */
+    height: auto;
+    min-width: 70px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right 0.5rem center;
     background-size: 1em 0.8em;
-    padding-right: 1.5rem; /* Make space for custom arrow */
-    border: 1px solid var(--bs-border-color); /* Add border for selects */
+    padding-right: 1.5rem;
+    border: 1px solid var(--bs-border-color);
 }
-/* Specific colors for inline priority selects */
-.priority-select.priority-high { background-color: #f8d7da; color: #721c24; } /* Red for High */
-.priority-select.priority-medium { background-color: #ffeeba; color: #856404; } /* Yellow for Medium */
-.priority-select.priority-low { background-color: #dee2e6; color: #495057; } /* Very light grey */
-
-/* Specific colors for inline status selects */
-.status-select.status-todo { background-color: #ffeeba; color: #856404; } /* Yellow */
-.status-select.status-donow { background-color: #f8d7da; color: #721c24; } /* Red */
-.status-select.status-onhold { background-color: #dee2e6; color: #495057; } /* Light grey - same as low priority */
-.status-select.status-complete { background-color: #d4edda; color: #155724; } /* Green */
-
+.priority-select.priority-high { background-color: #f8d7da; color: #721c24; }
+.priority-select.priority-medium { background-color: #ffeeba; color: #856404; }
+.priority-select.priority-low { background-color: #dee2e6; color: #495057; }
+.status-select.status-todo { background-color: #ffeeba; color: #856404; }
+.status-select.status-donow { background-color: #f8d7da; color: #721c24; }
+.status-select.status-onhold { background-color: #dee2e6; color: #495057; }
+.status-select.status-complete { background-color: #d4edda; color: #155724; }
 
 .table-date-input {
     font-size: 0.9em;
     padding: 3px 6px;
     height: auto;
-    width: 100%; /* Fill table cell */
-    min-width: 120px; /* Ensure enough space for date */
+    width: 100%;
+    min-width: 120px;
 }
 
 /* Status Group Headers in Tasks Tab */
 .status-group-header {
     cursor: pointer;
     font-weight: bold;
-    padding: 0.5rem 0.75rem; /* Match header padding */
+    padding: 0.5rem 0.75rem;
 }
 .status-group-header .collapse-toggle {
     display: inline-block;
     vertical-align: middle;
     margin-right: 8px;
 }
-/* Apply full background colors to status group headers */
 .status-group-header.status-todo-header { background-color: #ffeeba; color: #856404; }
 .status-group-header.status-donow-header { background-color: #f8d7da; color: #721c24; }
 .status-group-header.status-onhold-header { background-color: #dee2e6; color: #495057; }
 .status-group-header.status-complete-header { background-color: #d4edda; color: #155724; }
 
-
-/* New: Main content area below header, beside offcanvas */
+/* Layout container */
 #main-layout-container {
     flex-grow: 1;
-    display: flex; /* Enable side-by-side for main content and offcanvas */
-    overflow: hidden; /* Prevent horizontal scroll when offcanvas is open */
+    display: flex;
+    overflow: hidden;
 }
-
 #main-content-area {
-    flex-grow: 1; /* Take remaining space */
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent horizontal scroll from inner tab content */
+    overflow: hidden;
 }
 
+/* --- MODIFIED SECTION FOR OFFCANVAS --- */
 
-/* Sideview (Detail Panel) */
+.offcanvas.offcanvas-end {
+    top: 80px !important;
+}
+
 .offcanvas-end {
-    /* Default desktop width */
+    /* Default desktop width. This will be part of the flex layout. */
     width: 600px;
-    min-width: 300px; /* Minimum desktop width */
-    max-width: 90vw; /* Maximum width relative to viewport */
-
-    transform: translateX(100%); /* Initial state for offcanvas */
-    transition: transform 0.3s ease-in-out; /* Smooth transition */
-    position: sticky; /* Keep it in the flow of #main-layout-container for desktop */
-    top: 0; /* Align to the top of its flex container */
-    right: 0;
-    height: 100%; /* Fill parent container's height */
-    box-shadow: -2px 0 5px rgba(0,0,0,0.05); /* Add shadow for separation */
+    min-width: 300px;
+    max-width: 90vw;
+    /* REMOVED 'position: sticky' which caused the resize conflict */
+    /* REMOVED 'transform' as it's not needed for a flex-based layout */
+    height: 100%;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.05);
     border-left: 1px solid var(--bs-border-color-translucent);
-    background-color: var(--bs-body-bg); /* Ensure background is set */
+    background-color: var(--bs-body-bg);
+    /* Make it a flex item that doesn't shrink */
+    flex-shrink: 0; 
 }
-/* When offcanvas is shown */
-.offcanvas-end.show {
-    transform: translateX(0%);
-}
-.offcanvas-end:not(.show) {
-        /* When hidden, collapse width to 0 so main content can expand. */
-        /* !important is needed to override the inline style set by the resizing script. */
-        width: 0 !important;
-        min-width: 0;
-        padding: 0;
-        border: 0;
-        /* overflow: hidden; */
+
+/* REMOVED the '.offcanvas-end:not(.show)' rule entirely */
+
+/* This rule correctly handles the mobile overlay behavior */
+@media (max-width: 767.98px) {
+    .offcanvas.offcanvas-end {
+        top: 0px !important;
     }
 
-@media (max-width: 767.98px) { /* Mobile breakpoint for small screens (Bootstrap 'md' is 768px) */
     .offcanvas-end {
-        width: 100vw; /* Full width on mobile */
-        max-width: 100vw; /* Ensure it stays full width */
-        position: fixed; /* Fixed position on mobile to overlay */
+        width: 100vw;
+        max-width: 100vw;
+        position: fixed; /* This is correct for mobile */
         top: 0;
         height: 100vh;
     }
-    #main-layout-container {
-        flex-direction: column; /* Stack header and main content on mobile */
-    }
 }
-
 
 /* Make offcanvas resizeable */
 .offcanvas-resize-handle {
     position: absolute;
     top: 0;
-    left: -10px; /* Position on the left edge for dragging */
+    left: -10px;
     bottom: 0;
-    width: 20px; /* Wider grab area */
-    cursor: ew-resize; /* East-west resize cursor */
-    z-index: 1050; /* Above offcanvas content */
+    width: 20px;
+    cursor: ew-resize;
+    z-index: 1050;
 }
 .offcanvas-resize-handle:hover {
-    background-color: rgba(0, 123, 255, 0.1); /* Subtle hover effect */
+    background-color: rgba(0, 123, 255, 0.1);
 }
 
 /* Offcanvas Header, Body, Buttons */
-.offcanvas-header {
-    border-bottom: 1px solid var(--bs-border-color-translucent);
-}
-.offcanvas-body {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1; /* Allow the body to take up all available vertical space */
-    overflow-y: auto; /* Add a scrollbar only when content overflows */
-}
-.detail-buttons {
-    margin-top: auto; /* Push buttons to the bottom */
-    border-top: 1px solid var(--bs-border-color-translucent);
-    padding-top: 15px;
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0; /* Prevent button area from shrinking */
-}
-.date-inputs input {
-    flex-grow: 1;
-}
+.offcanvas-header { border-bottom: 1px solid var(--bs-border-color-translucent); }
+.offcanvas-body { display: flex; flex-direction: column; flex-grow: 1; overflow-y: auto; }
+.detail-buttons { margin-top: auto; border-top: 1px solid var(--bs-border-color-translucent); padding-top: 15px; display: flex; gap: 10px; flex-shrink: 0; }
+.date-inputs input { flex-grow: 1; }
 
 /* Priority & Status selects in Detail View (applying color directly) */
-#detailPriority, #detailStatus, #detailTaskProjectSelect {
-    /* font-weight: bold; */
-    padding: 5px 10px;
-    border-radius: 5px;
-    height: auto; /* Adjust height for styling */
-    appearance: none; /* Remove default arrow */
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 1em 0.8em;
-    padding-right: 2rem;
-    border: 1px solid var(--bs-border-color); /* Add border for selects */
+#detailPriority,
+#detailStatus,
+#detailTaskProjectSelect {
+  /* font-weight: bold; */
+  padding: 5px 10px;
+  border-radius: 5px;
+  height: auto; /* Adjust height for styling */
+  appearance: none; /* Remove default arrow */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1em 0.8em;
+  padding-right: 2rem;
+  border: 1px solid var(--bs-border-color); /* Add border for selects */
 }
 /* Priority select in detail view */
-#detailPriority.priority-high { background-color: #dc3545; color: white; } /* Darker red */
-#detailPriority.priority-medium { background-color: #ffc107; color: black; } /* Darker yellow */
-#detailPriority.priority-low { background-color: #adb5bd; color: black; } /* Darker grey */
+#detailPriority.priority-high {
+  background-color: #dc3545;
+  color: white;
+} /* Darker red */
+#detailPriority.priority-medium {
+  background-color: #ffc107;
+  color: black;
+} /* Darker yellow */
+#detailPriority.priority-low {
+  background-color: #adb5bd;
+  color: black;
+} /* Darker grey */
 
 /* Status select in detail view */
-#detailStatus.status-todo { background-color: #ffc107; color: black; } /* Yellow */
-#detailStatus.status-donow { background-color: #dc3545; color: white; } /* Red */
-#detailStatus.status-onhold { background-color: #adb5bd; color: black; } /* Grey */
-#detailStatus.status-complete { background-color: #198754; color: white; } /* Green */
-
+#detailStatus.status-todo {
+  background-color: #ffc107;
+  color: black;
+} /* Yellow */
+#detailStatus.status-donow {
+  background-color: #dc3545;
+  color: white;
+} /* Red */
+#detailStatus.status-onhold {
+  background-color: #adb5bd;
+  color: black;
+} /* Grey */
+#detailStatus.status-complete {
+  background-color: #198754;
+  color: white;
+} /* Green */
 
 /* Nested Task List in Project Detail View */
 .project-tasks-list-container {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid var(--bs-border-color-translucent);
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--bs-border-color-translucent);
 }
 .project-tasks-list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 .project-tasks-list {
-    list-style: none;
-    padding-left: 0;
-    margin-bottom: 0;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
 }
 .project-tasks-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px 0;
-    border-bottom: 1px dashed var(--bs-border-color-translucent);
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--bs-border-color-translucent);
+  cursor: pointer;
 }
 .project-tasks-list li:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 .project-tasks-list li:hover {
-    background-color: var(--bs-secondary-bg);
+  background-color: var(--bs-secondary-bg);
 }
 .project-tasks-list .task-title-inner {
-    flex-grow: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .project-tasks-list .task-controls-inner {
-    display: flex;
-    gap: 5px;
-    flex-shrink: 0;
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
 }
 .project-tasks-list .task-controls-inner select {
-    font-size: 0.7em;
-    padding: 2px 4px;
-    min-width: 60px;
-    height: auto;
+  font-size: 0.7em;
+  padding: 2px 4px;
+  min-width: 60px;
+  height: auto;
 }
-
 
 /* Calendar */
 .calendar-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    background-color: var(--bs-secondary-bg);
-    border-radius: 5px;
-    padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  background-color: var(--bs-secondary-bg);
+  border-radius: 5px;
+  padding: 10px;
 }
 .calendar-day-header {
-    text-align: center;
-    font-weight: bold;
-    padding: 5px 0;
-    color: var(--bs-primary);
+  text-align: center;
+  font-weight: bold;
+  padding: 5px 0;
+  color: var(--bs-primary);
 }
 .calendar-day {
-    background-color: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color-translucent);
-    min-height: 100px; /* Ensure a decent size for days */
-    padding: 5px;
-    border-radius: 4px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden; /* Hide overflow tasks */
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color-translucent);
+  min-height: 100px; /* Ensure a decent size for days */
+  padding: 5px;
+  border-radius: 4px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Hide overflow tasks */
 }
 .calendar-day.empty {
-    background-color: var(--bs-tertiary-bg);
-    border: 1px dashed var(--bs-border-color-translucent);
+  background-color: var(--bs-tertiary-bg);
+  border: 1px dashed var(--bs-border-color-translucent);
 }
 .calendar-day-number {
-    font-weight: bold;
-    margin-bottom: 5px;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 .calendar-day-task {
-    color: white; /* Default text color on colored background */
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-size: 0.75em;
-    margin-bottom: 2px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    /* Removed border-left property */
+  color: white; /* Default text color on colored background */
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.75em;
+  margin-bottom: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  /* Removed border-left property */
 }
 .calendar-day-task:hover {
-    filter: brightness(1.1); /* Slightly brighter on hover */
+  filter: brightness(1.1); /* Slightly brighter on hover */
 }
 /* Calendar task priority colors (as backgrounds now) */
-.calendar-day-task.priority-high { background-color: #dc3545; } /* Red */
-.calendar-day-task.priority-medium { background-color: #ffc107; color: black; } /* Yellow */
-.calendar-day-task.priority-low { background-color: #adb5bd; color: black; } /* Grey */
-
+.calendar-day-task.priority-high {
+  background-color: #dc3545;
+} /* Red */
+.calendar-day-task.priority-medium {
+  background-color: #ffc107;
+  color: black;
+} /* Yellow */
+.calendar-day-task.priority-low {
+  background-color: #adb5bd;
+  color: black;
+} /* Grey */
 
 /* Highlight today */
 .calendar-day.today {
-    border: 2px solid var(--bs-primary);
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  border: 2px solid var(--bs-primary);
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
 /* Dark mode adjustments */
 /* Priority selects in dark mode */
-[data-bs-theme="dark"] .priority-select.priority-low { background-color: #495057; color: #dee2e6; border-color: var(--bs-border-color-translucent);}
-[data-bs-theme="dark"] #detailPriority.priority-low { background-color: #343a40; color: #dee2e6; } /* Darker for detail view */
-[data-bs-theme="dark"] .calendar-day-task.priority-low { background-color: #495057; color: #dee2e6; }
-
+[data-bs-theme="dark"] .priority-select.priority-low {
+  background-color: #495057;
+  color: #dee2e6;
+  border-color: var(--bs-border-color-translucent);
+}
+[data-bs-theme="dark"] #detailPriority.priority-low {
+  background-color: #343a40;
+  color: #dee2e6;
+} /* Darker for detail view */
+[data-bs-theme="dark"] .calendar-day-task.priority-low {
+  background-color: #495057;
+  color: #dee2e6;
+}
+Ey
 
 /* Status selects in dark mode */
-[data-bs-theme="dark"] .status-select.status-todo { background-color: #d19a00; color: white; } /* Darker yellow */
-[data-bs-theme="dark"] .status-select.status-donow { background-color: #be2e2e; color: white; } /* Darker red */
-[data-bs-theme="dark"] .status-select.status-onhold { background-color: #495057; color: #dee2e6; } /* Dark grey */
-[data-bs-theme="dark"] .status-select.status-complete { background-color: #127435; color: white; } /* Darker green */
+[data-bs-theme="dark"] .status-select.status-todo {
+  background-color: #d19a00;
+  color: white;
+} /* Darker yellow */
+[data-bs-theme="dark"] .status-select.status-donow {
+  background-color: #be2e2e;
+  color: white;
+} /* Darker red */
+[data-bs-theme="dark"] .status-select.status-onhold {
+  background-color: #495057;
+  color: #dee2e6;
+} /* Dark grey */
+[data-bs-theme="dark"] .status-select.status-complete {
+  background-color: #127435;
+  color: white;
+} /* Darker green */
 
 /* Status group headers in dark mode */
-[data-bs-theme="dark"] .status-group-header.status-todo-header { background-color: #d19a00; color: white; }
-[data-bs-theme="dark"] .status-group-header.status-donow-header { background-color: #be2e2e; color: white; }
-[data-bs-theme="dark"] .status-group-header.status-onhold-header { background-color: #495057; color: #dee2e6; }
-[data-bs-theme="dark"] .status-group-header.status-complete-header { background-color: #127435; color: white; }
+[data-bs-theme="dark"] .status-group-header.status-todo-header {
+  background-color: #d19a00;
+  color: white;
+}
+[data-bs-theme="dark"] .status-group-header.status-donow-header {
+  background-color: #be2e2e;
+  color: white;
+}
+[data-bs-theme="dark"] .status-group-header.status-onhold-header {
+  background-color: #495057;
+  color: #dee2e6;
+}
+[data-bs-theme="dark"] .status-group-header.status-complete-header {
+  background-color: #127435;
+  color: white;
+}
 
 /* Detail view selects in dark mode */
-[data-bs-theme="dark"] #detailStatus.status-todo { background-color: #d19a00; color: white; }
-[data-bs-theme="dark"] #detailStatus.status-donow { background-color: #be2e2e; color: white; }
-[data-bs-theme="dark"] #detailStatus.status-onhold { background-color: #495057; color: #dee2e6; }
-[data-bs-theme="dark"] #detailStatus.status-complete { background-color: #127435; color: white; }
+[data-bs-theme="dark"] #detailStatus.status-todo {
+  background-color: #d19a00;
+  color: white;
+}
+[data-bs-theme="dark"] #detailStatus.status-donow {
+  background-color: #be2e2e;
+  color: white;
+}
+[data-bs-theme="dark"] #detailStatus.status-onhold {
+  background-color: #495057;
+  color: #dee2e6;
+}
+[data-bs-theme="dark"] #detailStatus.status-complete {
+  background-color: #127435;
+  color: white;
+}
 
+[data-bs-theme="dark"] .table-date-input {
+  background-color: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color-translucent);
+}
 
-[data-bs-theme="dark"] .table-date-input { background-color: var(--bs-secondary-bg); border-color: var(--bs-border-color-translucent); }
-
-
-[data-bs-theme="dark"] .project-row { background-color: var(--bs-dark-bg-subtle); }
-[data-bs-theme="dark"] .project-row:hover { background-color: var(--bs-gray-700); }
-[data-bs-theme="dark"] .calendar-day { background-color: var(--bs-body-bg); }
-[data-bs-theme="dark"] .calendar-day.empty { background-color: var(--bs-tertiary-bg); }
-[data-bs-theme="dark"] .project-tasks-list li { border-bottom-color: var(--bs-border-color-translucent); }
-[data-bs-theme="dark"] .project-tasks-list li:hover { background-color: var(--bs-gray-700); }
+[data-bs-theme="dark"] .project-row {
+  background-color: var(--bs-dark-bg-subtle);
+}
+[data-bs-theme="dark"] .project-row:hover {
+  background-color: var(--bs-gray-700);
+}
+[data-bs-theme="dark"] .calendar-day {
+  background-color: var(--bs-body-bg);
+}
+[data-bs-theme="dark"] .calendar-day.empty {
+  background-color: var(--bs-tertiary-bg);
+}
+[data-bs-theme="dark"] .project-tasks-list li {
+  border-bottom-color: var(--bs-border-color-translucent);
+}
+[data-bs-theme="dark"] .project-tasks-list li:hover {
+  background-color: var(--bs-gray-700);
+}
 
 /* Ensure custom select arrows are visible in dark mode */
-[data-bs-theme="dark"] .status-select, [data-bs-theme="dark"] .priority-select,
-[data-bs-theme="dark"] #detailPriority, [data-bs-theme="dark"] #detailStatus, [data-bs-theme="dark"] #detailTaskProjectSelect {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f8f9fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e");
+[data-bs-theme="dark"] .status-select,
+[data-bs-theme="dark"] .priority-select,
+[data-bs-theme="dark"] #detailPriority,
+[data-bs-theme="dark"] #detailStatus,
+[data-bs-theme="dark"] #detailTaskProjectSelect {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f8f9fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5L8 11L14 5'/%3e%3c/svg%3e");
 }
 
 /* Header responsiveness */
 header {
-    background-color: var(--bs-tertiary-bg); /* Light grey background for header */
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--bs-border-color-translucent);
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Space out items */
-    flex-wrap: nowrap; /* Prevent wrapping by default */
-    gap: 10px; /* Space between items */
-    flex-shrink: 0; /* Prevent header from shrinking */
-    z-index: 1050; /* Ensure it stays on top of content below */
-    width: 100%; /* Full width */
+  background-color: var(
+    --bs-tertiary-bg
+  ); /* Light grey background for header */
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--bs-border-color-translucent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Space out items */
+  flex-wrap: nowrap; /* Prevent wrapping by default */
+  gap: 10px; /* Space between items */
+  flex-shrink: 0; /* Prevent header from shrinking */
+  z-index: 1050; /* Ensure it stays on top of content below */
+  width: 100%; /* Full width */
 }
 
 /* Desktop: Header items are side-by-side */
-@media (min-width: 768px) { /* md and up breakpoint */
-    #app-name { order: 1; flex-shrink: 0; display: block; } /* Ensure app name visible on desktop */
-    #search-field { order: 2; flex-grow: 1; margin: 0 20px; } /* Search in middle, grows */
-    #user-controls { order: 3; flex-shrink: 0; } /* User controls right */
+@media (min-width: 768px) {
+  /* md and up breakpoint */
+  #app-name {
+    order: 1;
+    flex-shrink: 0;
+    display: block;
+  } /* Ensure app name visible on desktop */
+  #search-field {
+    order: 2;
+    flex-grow: 1;
+    margin: 0 20px;
+  } /* Search in middle, grows */
+  #user-controls {
+    order: 3;
+    flex-shrink: 0;
+  } /* User controls right */
 }
 
 /* Mobile: Header items stack for very small screens */
-@media (max-width: 767.98px) { /* xs to sm breakpoint */
-    header {
-        flex-wrap: wrap; /* Allow items to wrap */
-        justify-content: center; /* Center items if they wrap */
-        padding: 10px; /* Smaller padding */
-        z-index: 1000; /* Ensure it stays on top of content below */
-    }
-    #app-name { order: 1; display: none !important; } /* Hide app name explicitly on mobile */
-    #user-controls { order: 2; width: auto; margin-left: auto; } /* Push user icon to right */
-    #search-field { order: 3; width: 100%; margin-top: 10px; } /* Search on a new line, full width */
-    #search-field .form-control { max-width: 100%; }
+@media (max-width: 767.98px) {
+  /* xs to sm breakpoint */
+  header {
+    flex-wrap: wrap; /* Allow items to wrap */
+    justify-content: center; /* Center items if they wrap */
+    padding: 10px; /* Smaller padding */
+    z-index: 1000; /* Ensure it stays on top of content below */
+  }
+  #app-name {
+    order: 1;
+    display: none !important;
+  } /* Hide app name explicitly on mobile */
+  #user-controls {
+    order: 2;
+    width: auto;
+    margin-left: auto;
+  } /* Push user icon to right */
+  #search-field {
+    order: 3;
+    width: 100%;
+    margin-top: 10px;
+  } /* Search on a new line, full width */
+  #search-field .form-control {
+    max-width: 100%;
+  }
 }
-
 
 /* Add these styles */
 .table-responsive {
-    overflow-x: auto;
+  overflow-x: auto;
 }
 
 .table {
-    min-width: 800px; /* Ensures table doesn't shrink too much on small screens */
+  min-width: 800px; /* Ensures table doesn't shrink too much on small screens */
 }
 
 .sticky-column {
-    position: sticky;
-    left: 0;
-    background-color: inherit;
-    z-index: 2;
+  position: sticky;
+  left: 0;
+  background-color: inherit;
+  z-index: 2;
 }
 
 .table-cell-title {
-    max-width: 300px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 /* Media query for mobile devices */
 @media (max-width: 767px) {
-    .table-cell-title {
-        max-width: 50vw; /* 50% of viewport width for mobile */
-    }
+  .table-cell-title {
+    max-width: 50vw; /* 50% of viewport width for mobile */
+  }
 }
 
 /* Adjust other column widths */
-.table th, .table td {
-    width: 15%;
+.table th,
+.table td {
+  width: 15%;
 }
 
-.table th:first-child, .table td:first-child {
-    width: 40%; /* Wider for title column */
+.table th:first-child,
+.table td:first-child {
+  width: 40%; /* Wider for title column */
 }
 
-.table th:nth-child(2), .table td:nth-child(2),
-.table th:nth-child(3), .table td:nth-child(3) {
-    width: 15%; /* For date columns */
+.table th:nth-child(2),
+.table td:nth-child(2),
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  width: 15%; /* For date columns */
 }
 
-.table th:nth-child(4), .table td:nth-child(4),
-.table th:nth-child(5), .table td:nth-child(5) {
-    width: 15%; /* For priority and status columns */
+.table th:nth-child(4),
+.table td:nth-child(4),
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 15%; /* For priority and status columns */
 }
-
 
 .project-link {
-    cursor: pointer;
-    color: var(--bs-primary);
-    text-decoration: underline;
+  cursor: pointer;
+  color: var(--bs-primary);
+  text-decoration: underline;
 }
 
 .project-link:hover {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 .project-link-icon {
-    cursor: pointer;
-    margin-left: 5px;
-    font-size: 0.8em;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 0.8em;
 }
 
 .project-link-icon:hover {
-    color: var(--bs-primary);
+  color: var(--bs-primary);
 }
 
 /* Project Detail View Styling */
 .offcanvas-end.project-detail {
-    background-color: var(--bs-tertiary-bg);
+  background-color: var(--bs-tertiary-bg);
 }
 
 /* Ensure form elements within project detail view have appropriate background */
 .offcanvas-end.project-detail .offcanvas-body {
-    background-color: var(--bs-tertiary-bg);
+  background-color: var(--bs-tertiary-bg);
 }
 
 .offcanvas-end.project-detail input,
 .offcanvas-end.project-detail select,
 .offcanvas-end.project-detail textarea {
-    background-color: var(--bs-body-bg);
+  background-color: var(--bs-body-bg);
 }
 
 /* Adjust for dark mode if necessary */
 [data-bs-theme="dark"] .offcanvas-end.project-detail {
-    background-color: var(--bs-dark-bg-subtle);
+  background-color: var(--bs-dark-bg-subtle);
 }
 
 [data-bs-theme="dark"] .offcanvas-end.project-detail input,
 [data-bs-theme="dark"] .offcanvas-end.project-detail select,
 [data-bs-theme="dark"] .offcanvas-end.project-detail textarea {
-    background-color: var(--bs-secondary-bg);
+  background-color: var(--bs-secondary-bg);
+}
+
+#user-controls .dropdown-menu {
+  min-width: 240px;
+}
+
+.dropdown-item-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Remove padding from the wrapper itself */
+  padding: 0;
+}
+
+.dropdown-item-wrapper .workspace-select-btn {
+  flex-grow: 1;
+  text-align: left;
+  /* Let the button's own padding handle spacing */
+  background: none;
+  border: none;
+  padding-right: 0.5rem;
+}
+
+/* FIX: Ensure active item text is visible in light and dark modes */
+.dropdown-item.active,
+.dropdown-item:active {
+  color: var(--bs-dropdown-link-active-color);
+  background-color: var(--bs-dropdown-link-active-bg);
+  font-weight: bold;
+}
+
+.dropdown-item-wrapper .workspace-actions {
+  display: flex;
+  align-items: center;
+  padding-right: 0.75rem; /* Space on the right of the buttons */
+}
+
+.dropdown-item-wrapper .workspace-action-btn {
+  color: var(--bs-secondary-color);
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  border-radius: var(--bs-border-radius-sm);
+  background: none;
+  border: none;
+}
+
+.dropdown-item-wrapper .workspace-action-btn:hover {
+  background-color: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+}
+
+.dropdown-header .btn-icon {
+  color: var(--bs-secondary-color);
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  border-radius: var(--bs-border-radius-sm);
+}
+
+.dropdown-header .btn-icon:hover {
+  background-color: var(--bs-tertiary-bg);
 }
