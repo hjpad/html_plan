@@ -378,6 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
       status: "To Do",
       startDate: new Date().toISOString().split("T")[0],
       ...itemData,
+      description: '',
     };
     items.push(newItem);
     await saveItemToFirestore(auth.currentUser.uid, newItem);
@@ -830,6 +831,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function openDetailSideview(itemId) {
     const item = items.find((i) => i.id === itemId);
+    const isProject = !item.parentId;
+    detailOffcanvasElement.classList.toggle('project-detail', isProject);
+    detailOffcanvasElement.classList.toggle('task-detail', !isProject);
     if (!item) return;
     detailItemIdInput.value = item.id;
     detailItemTypeInput.value = item.parentId ? "task" : "project";
@@ -844,6 +848,22 @@ document.addEventListener("DOMContentLoaded", () => {
       item.priority
     )}`;
     detailStatusSelect.className = `form-select ${getStatusClass(item.status)}`;
+
+    // textArea adjust height
+    const textarea = detailDescriptionInput;
+    let defaultHeight = textarea.style.height;
+
+    const adjustHeight = () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    };
+
+    textarea.addEventListener('focus', adjustHeight);
+    textarea.addEventListener('input', adjustHeight);
+    textarea.addEventListener('blur', () => {
+        textarea.style.height = defaultHeight;
+    });
+
     if (item.parentId) {
       document.getElementById("detailOffcanvasLabel").textContent =
         "Task Details";
