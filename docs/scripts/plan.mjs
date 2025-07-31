@@ -67,6 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const tasksTableBody = document
     .getElementById("tasksTable")
     .querySelector("tbody");
+  // NEW: DOM element for the linked workspaces dropdown list
+  const linkedWorkspacesList = document.getElementById("linkedWorkspacesList");
   const calendarGrid = document.getElementById("calendarGrid");
   const mainTabs = document.getElementById("mainTabs");
   const monthSelect = document.getElementById("monthSelect");
@@ -199,9 +201,17 @@ document.addEventListener("DOMContentLoaded", () => {
           loadWorkspacesFromFirestore(user.uid),
         ]);
 
+        // NEW: Initialize linkedWorkspaces on all loaded workspaces if it doesn't exist
+        workspaces.forEach(ws => {
+            if (!ws.linkedWorkspaces) {
+                ws.linkedWorkspaces = {};
+            }
+        });
+
         let defaultWorkspaceId;
         if (workspaces.length === 0) {
-          const defaultWorkspace = { id: generateId(), name: "Workspace" };
+          // NEW: Add linkedWorkspaces to the default workspace object
+          const defaultWorkspace = { id: generateId(), name: "Workspace", linkedWorkspaces: {} };
           await saveWorkspaceToFirestore(user.uid, defaultWorkspace);
           workspaces.push(defaultWorkspace);
           defaultWorkspaceId = defaultWorkspace.id;
@@ -314,7 +324,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = prompt("Enter the name for the new workspace:");
     if (name && name.trim()) {
       if (!auth.currentUser) return;
-      const newWorkspace = { id: generateId(), name: name.trim() };
+      // NEW: Initialize new workspace with an empty linkedWorkspaces map
+      const newWorkspace = { id: generateId(), name: name.trim(), linkedWorkspaces: {} };
       await saveWorkspaceToFirestore(auth.currentUser.uid, newWorkspace);
       workspaces.push(newWorkspace);
       switchWorkspace(newWorkspace.id);
@@ -354,6 +365,15 @@ document.addEventListener("DOMContentLoaded", () => {
           )
       );
       workspaces = workspaces.filter((w) => w.id !== workspaceId);
+
+      // NEW: Remove deleted workspace ID from all other linkedWorkspaces maps
+      workspaces.forEach(ws => {
+          if (ws.linkedWorkspaces && ws.linkedWorkspaces[workspaceId]) {
+              delete ws.linkedWorkspaces[workspaceId];
+              saveWorkspaceToFirestore(auth.currentUser.uid, ws);
+          }
+      });
+
       if (currentWorkspaceId === workspaceId) switchWorkspace(workspaces[0].id);
       else {
         renderUserMenu();
@@ -418,7 +438,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Rendering Functions ---
-  // FIX: Restored the missing function definition
   function applyGlobalSearchFilter(item) {
     if (!globalSearchTerm) return true;
     const searchLower = globalSearchTerm.toLowerCase();
@@ -589,20 +608,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // MODIFIED: This function now renders tasks from linked workspaces.
   function renderTasksTab() {
     tasksTableBody.innerHTML = "";
     document.getElementById("noTasksMessage").style.display = "none";
+    
+    // NEW: Render the workspace linking dropdown first.
+    renderLinkedWorkspacesDropdown();
+
+    const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
+    if (!currentWorkspace) {
+        document.getElementById("noTasksMessage").style.display = "block";
+        return;
+    }
+
+    // NEW: Get IDs of linked workspaces where the flag is true
+    const linkedWorkspaceIds = currentWorkspace.linkedWorkspaces
+        ? Object.keys(currentWorkspace.linkedWorkspaces).filter(id => currentWorkspace.linkedWorkspaces[id])
+        : [];
+    
+    // NEW: Combine current and linked workspace IDs into a set for efficient lookup
+    const workspaceIdsToShow = new Set([currentWorkspaceId, ...linkedWorkspaceIds]);
+
+    // NEW: Filter projects from all relevant workspaces
     const projectIdsInWorkspace = new Set(
       items
-        .filter((i) => !i.parentId && i.workspaceId === currentWorkspaceId)
+        .filter((i) => !i.parentId && workspaceIdsToShow.has(i.workspaceId))
         .map((p) => p.id)
     );
+
     let allTasks = items.filter(
       (item) =>
         item.parentId &&
         projectIdsInWorkspace.has(item.parentId) &&
         applyGlobalSearchFilter(item)
     );
+
     if (hideCompletedTasks) {
       allTasks = allTasks.filter((t) => t.status !== "Complete");
     }
@@ -953,6 +994,95 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
+
+  // --- NEW: Workspace Linking Functions ---
+
+  /**
+   * Toggles the linked status between the current and a target workspace.
+   * Creates a symmetric link and saves both workspace objects to Firestore.
+   * @param {string} targetWorkspaceId The ID of the workspace to link/unlink.
+   * @param {boolean} isChecked The new checked state from the checkbox.
+   */
+  async function handleLinkedWorkspaceToggle(targetWorkspaceId, isChecked) {
+      if (!auth.currentUser) return;
+
+      const uid = auth.currentUser.uid;
+      const currentWs = workspaces.find(w => w.id === currentWorkspaceId);
+      const targetWs = workspaces.find(w => w.id === targetWorkspaceId);
+
+      if (!currentWs || !targetWs) {
+          console.error("Workspace not found for linking.");
+          return;
+      }
+
+      // Ensure the linkedWorkspaces object exists on both workspaces
+      if (!currentWs.linkedWorkspaces) currentWs.linkedWorkspaces = {};
+      if (!targetWs.linkedWorkspaces) targetWs.linkedWorkspaces = {};
+
+      // Update both workspaces for a two-way link
+      currentWs.linkedWorkspaces[targetWorkspaceId] = isChecked;
+      targetWs.linkedWorkspaces[currentWorkspaceId] = isChecked;
+
+      try {
+          // Save both updated workspaces to Firestore
+          await Promise.all([
+              saveWorkspaceToFirestore(uid, currentWs),
+              saveWorkspaceToFirestore(uid, targetWs)
+          ]);
+          // Refresh the tasks tab to show the changes
+          renderTasksTab();
+      } catch (error) {
+          console.error("Error updating linked workspaces:", error);
+          alert("Failed to update workspace link.");
+          // Revert local state if save fails
+          currentWs.linkedWorkspaces[targetWorkspaceId] = !isChecked;
+          targetWs.linkedWorkspaces[currentWorkspaceId] = !isChecked;
+      }
+  }
+
+  /**
+   * Renders the dropdown menu with checkboxes for linking to other workspaces.
+   */
+  function renderLinkedWorkspacesDropdown() {
+      linkedWorkspacesList.innerHTML = ""; // Clear existing items
+
+      const otherWorkspaces = workspaces.filter(w => w.id !== currentWorkspaceId);
+      const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
+
+      if (!currentWorkspace) return; 
+
+      if (otherWorkspaces.length === 0) {
+          linkedWorkspacesList.innerHTML = '<li><span class="dropdown-item-text px-3 text-muted">No other workspaces.</span></li>';
+          return;
+      }
+      
+      if (!currentWorkspace.linkedWorkspaces) currentWorkspace.linkedWorkspaces = {};
+
+      otherWorkspaces.forEach(workspace => {
+          const li = document.createElement("li");
+          const isChecked = currentWorkspace.linkedWorkspaces[workspace.id] === true;
+
+          li.innerHTML = `
+              <div class="form-check dropdown-item">
+                  <input class="form-check-input" type="checkbox" id="link-${workspace.id}" ${isChecked ? 'checked' : ''}>
+                  <label class="form-check-label" for="link-${workspace.id}">
+                      ${workspace.name}
+                  </label>
+              </div>
+          `;
+
+          // Stop propagation on the list item to prevent the dropdown from closing on click
+          li.addEventListener('click', (e) => e.stopPropagation());
+
+          const checkbox = li.querySelector('input');
+          checkbox.addEventListener('change', (e) => {
+              handleLinkedWorkspaceToggle(workspace.id, e.target.checked);
+          });
+
+          linkedWorkspacesList.appendChild(li);
+      });
+  }
+
 
   // --- Event Listeners ---
   togglePasswordBtn.addEventListener("click", () => {

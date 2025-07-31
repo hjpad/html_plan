@@ -156,8 +156,17 @@
                     <!-- Tasks Tab Content -->
                     <div class="tab-pane fade" id="tasks-content" role="tabpanel" aria-labelledby="tasks-tab">
                         <div class="d-flex justify-content-end mb-3 gap-3">
+                            <!-- NEW: Dropdown for linking workspaces -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="linkedWorkspacesDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                    <i class="bi bi-diagram-3"></i> Link Workspaces
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="linkedWorkspacesDropdown" id="linkedWorkspacesList">
+                                    <!-- Workspace checkboxes will be rendered here by JS -->
+                                </ul>
+                            </div>
                             <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="hideCompletedTasksSwitch">
+                                <input class="form-check-input" type="checkbox" id="hideCompletedTasksSwitch" checked>
                                 <label class="form-check-label" for="hideCompletedTasksSwitch">Hide Completed</label>
                             </div>
                             <div class="btn-group" role="group" aria-label="Tasks collapse/expand">
@@ -171,6 +180,7 @@
                                     <tr>
                                         <th class="sticky-column">Title</th>
                                         <th>Project</th>
+                                        <th>Start Date</th>
                                         <th>Due Date</th>
                                         <th>Priority</th>
                                         <th>Status</th>
