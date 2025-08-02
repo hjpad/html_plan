@@ -1,13 +1,13 @@
-# html_notes-fb
+# html_plan
 
-A simple application for calculations with variables, based on a static webpage.
+A simple application for projects and tasks management, based on a static webpage and Firebase.
 
 https://hjpad.github.io/html_plan
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 ## Acknowledgments
 
-- Bootstrap
+* Bootstrap
+* Firebase

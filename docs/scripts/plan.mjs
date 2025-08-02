@@ -67,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const tasksTableBody = document
     .getElementById("tasksTable")
     .querySelector("tbody");
-  // NEW: DOM element for the linked workspaces dropdown list
   const linkedWorkspacesList = document.getElementById("linkedWorkspacesList");
   const calendarGrid = document.getElementById("calendarGrid");
   const mainTabs = document.getElementById("mainTabs");
@@ -201,7 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
           loadWorkspacesFromFirestore(user.uid),
         ]);
 
-        // NEW: Initialize linkedWorkspaces on all loaded workspaces if it doesn't exist
         workspaces.forEach(ws => {
             if (!ws.linkedWorkspaces) {
                 ws.linkedWorkspaces = {};
@@ -210,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let defaultWorkspaceId;
         if (workspaces.length === 0) {
-          // NEW: Add linkedWorkspaces to the default workspace object
           const defaultWorkspace = { id: generateId(), name: "Workspace", linkedWorkspaces: {} };
           await saveWorkspaceToFirestore(user.uid, defaultWorkspace);
           workspaces.push(defaultWorkspace);
@@ -324,7 +321,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = prompt("Enter the name for the new workspace:");
     if (name && name.trim()) {
       if (!auth.currentUser) return;
-      // NEW: Initialize new workspace with an empty linkedWorkspaces map
       const newWorkspace = { id: generateId(), name: name.trim(), linkedWorkspaces: {} };
       await saveWorkspaceToFirestore(auth.currentUser.uid, newWorkspace);
       workspaces.push(newWorkspace);
@@ -366,7 +362,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       workspaces = workspaces.filter((w) => w.id !== workspaceId);
 
-      // NEW: Remove deleted workspace ID from all other linkedWorkspaces maps
       workspaces.forEach(ws => {
           if (ws.linkedWorkspaces && ws.linkedWorkspaces[workspaceId]) {
               delete ws.linkedWorkspaces[workspaceId];
@@ -608,12 +603,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // MODIFIED: This function now renders tasks from linked workspaces.
   function renderTasksTab() {
     tasksTableBody.innerHTML = "";
     document.getElementById("noTasksMessage").style.display = "none";
     
-    // NEW: Render the workspace linking dropdown first.
     renderLinkedWorkspacesDropdown();
 
     const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
@@ -622,15 +615,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // NEW: Get IDs of linked workspaces where the flag is true
     const linkedWorkspaceIds = currentWorkspace.linkedWorkspaces
         ? Object.keys(currentWorkspace.linkedWorkspaces).filter(id => currentWorkspace.linkedWorkspaces[id])
         : [];
     
-    // NEW: Combine current and linked workspace IDs into a set for efficient lookup
     const workspaceIdsToShow = new Set([currentWorkspaceId, ...linkedWorkspaceIds]);
 
-    // NEW: Filter projects from all relevant workspaces
     const projectIdsInWorkspace = new Set(
       items
         .filter((i) => !i.parentId && workspaceIdsToShow.has(i.workspaceId))
@@ -905,34 +895,47 @@ document.addEventListener("DOMContentLoaded", () => {
         textarea.style.height = defaultHeight;
     });
 
-    if (item.parentId) {
-      document.getElementById("detailOffcanvasLabel").textContent =
-        "Task Details";
+    if (item.parentId) { // This is a task
+      document.getElementById("detailOffcanvasLabel").textContent = "Task Details";
       detailProjectWorkspaceField.style.display = "none";
       detailTaskProjectField.style.display = "block";
       projectTasksListContainer.style.display = "none";
       document.getElementById("addNestedTaskBtn").style.display = "none";
-      const projectsInWorkspace = items
-        .filter((p) => !p.parentId && p.workspaceId === currentWorkspaceId)
-        .sort((a, b) => a.title.localeCompare(b.title));
-      detailTaskProjectSelect.innerHTML =
-        '<option value="">-- Select Project --</option>' +
-        projectsInWorkspace
-          .map(
-            (p) =>
-              `<option value="${p.id}" ${
-                p.id === item.parentId ? "selected" : ""
-              }>${p.title}</option>`
-          )
-          .join("");
-    } else {
-      document.getElementById("detailOffcanvasLabel").textContent =
-        "Project Details";
+
+      // --- START: CORRECTED LOGIC FOR TASK PROJECT DROPDOWN ---
+      // 1. Find the parent project of the current task.
+      const parentProject = items.find(p => p.id === item.parentId);
+
+      // 2. If we found the parent, populate the dropdown with projects from its workspace.
+      if (parentProject) {
+        // 3. Get the workspace ID from the found parent project.
+        const parentProjectWorkspaceId = parentProject.workspaceId;
+
+        // 4. Filter the main `items` list to get ALL projects from that specific workspace.
+        const projectsInCorrectWorkspace = items
+            .filter(p => !p.parentId && p.workspaceId === parentProjectWorkspaceId)
+            .sort((a, b) => a.title.localeCompare(b.title));
+
+        // 5. Generate the HTML for the options, marking the task's actual parent as 'selected'.
+        const optionsHtml = projectsInCorrectWorkspace.map(p =>
+            `<option value="${p.id}" ${p.id === item.parentId ? "selected" : ""}>${p.title}</option>`
+        ).join('');
+
+        // 6. Populate the dropdown.
+        detailTaskProjectSelect.innerHTML = '<option value="">-- Select Project --</option>' + optionsHtml;
+      } else {
+        // This is an edge case, if a task's parent project was deleted or data is corrupt.
+        console.error(`Could not find parent project with ID: ${item.parentId} for task: "${item.title}"`);
+        detailTaskProjectSelect.innerHTML = '<option value="">-- Project Not Found --</option>';
+      }
+      // --- END: CORRECTED LOGIC ---
+
+    } else { // This is a project
+      document.getElementById("detailOffcanvasLabel").textContent = "Project Details";
       detailTaskProjectField.style.display = "none";
       detailProjectWorkspaceField.style.display = "block";
       projectTasksListContainer.style.display = "block";
-      document.getElementById("addNestedTaskBtn").style.display =
-        "inline-block";
+      document.getElementById("addNestedTaskBtn").style.display = "inline-block";
       detailProjectWorkspaceSelect.innerHTML = workspaces
         .map(
           (w) =>
@@ -995,14 +998,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- NEW: Workspace Linking Functions ---
+  // --- Workspace Linking Functions ---
 
-  /**
-   * Toggles the linked status between the current and a target workspace.
-   * Creates a symmetric link and saves both workspace objects to Firestore.
-   * @param {string} targetWorkspaceId The ID of the workspace to link/unlink.
-   * @param {boolean} isChecked The new checked state from the checkbox.
-   */
   async function handleLinkedWorkspaceToggle(targetWorkspaceId, isChecked) {
       if (!auth.currentUser) return;
 
@@ -1015,36 +1012,28 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
       }
 
-      // Ensure the linkedWorkspaces object exists on both workspaces
       if (!currentWs.linkedWorkspaces) currentWs.linkedWorkspaces = {};
       if (!targetWs.linkedWorkspaces) targetWs.linkedWorkspaces = {};
 
-      // Update both workspaces for a two-way link
       currentWs.linkedWorkspaces[targetWorkspaceId] = isChecked;
       targetWs.linkedWorkspaces[currentWorkspaceId] = isChecked;
 
       try {
-          // Save both updated workspaces to Firestore
           await Promise.all([
               saveWorkspaceToFirestore(uid, currentWs),
               saveWorkspaceToFirestore(uid, targetWs)
           ]);
-          // Refresh the tasks tab to show the changes
           renderTasksTab();
       } catch (error) {
           console.error("Error updating linked workspaces:", error);
           alert("Failed to update workspace link.");
-          // Revert local state if save fails
           currentWs.linkedWorkspaces[targetWorkspaceId] = !isChecked;
           targetWs.linkedWorkspaces[currentWorkspaceId] = !isChecked;
       }
   }
 
-  /**
-   * Renders the dropdown menu with checkboxes for linking to other workspaces.
-   */
   function renderLinkedWorkspacesDropdown() {
-      linkedWorkspacesList.innerHTML = ""; // Clear existing items
+      linkedWorkspacesList.innerHTML = ""; 
 
       const otherWorkspaces = workspaces.filter(w => w.id !== currentWorkspaceId);
       const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
@@ -1071,7 +1060,6 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
           `;
 
-          // Stop propagation on the list item to prevent the dropdown from closing on click
           li.addEventListener('click', (e) => e.stopPropagation());
 
           const checkbox = li.querySelector('input');
